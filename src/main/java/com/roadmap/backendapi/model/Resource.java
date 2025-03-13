@@ -16,7 +16,7 @@ public class Resource {
     private Long id;
     private String title;
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('VIDEO','ARTICLE','BOOK',''COURSE','PODCAST')")
+    @Column(columnDefinition = "ENUM('VIDEO','ARTICLE','BOOK','COURSE','PODCAST')")
     private ResourseType type;
     @Column(nullable = false,columnDefinition = "TEXT")
     private String url;

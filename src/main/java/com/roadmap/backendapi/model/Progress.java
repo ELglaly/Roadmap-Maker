@@ -1,9 +1,7 @@
 package com.roadmap.backendapi.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.sql.Timestamp;
 
@@ -11,6 +9,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Setter
+@Getter
 public class Progress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
