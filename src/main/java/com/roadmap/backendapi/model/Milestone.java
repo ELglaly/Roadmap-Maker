@@ -44,10 +44,10 @@ public class Milestone {
     @JoinColumn(name = "roadmap_id",nullable = false)
     private Roadmap roadmap;
 
-    @OneToMany(mappedBy = "milestone",cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true)
+    @OneToMany(mappedBy = "milestone",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Resource> resources;
 
-    @OneToMany(mappedBy = "milestone",cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true)
+    @OneToMany(mappedBy = "milestone",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Progress> progress;
 
 }

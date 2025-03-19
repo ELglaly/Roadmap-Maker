@@ -4,22 +4,19 @@ import com.roadmap.backendapi.dto.MilestoneDTO;
 import com.roadmap.backendapi.model.Milestone;
 import lombok.RequiredArgsConstructor;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-@Component
+import java.util.List;
 
-public class MilestoneMapper {
-  private final ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface MilestoneMapper {
+  MilestoneMapper INSTANCE = Mappers.getMapper(MilestoneMapper.class);
 
-    public MilestoneMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-    }
+  @Mapping(target = "resourcesDTO", source = "resources")
+  MilestoneDTO toDTO(Milestone milestone);
 
-    public MilestoneDTO toDTO(Milestone milestone) {
-    return modelMapper.map(milestone, MilestoneDTO.class);
-  }
-  public Milestone toEntity(MilestoneDTO milestoneDTO) {
-    return modelMapper.map(milestoneDTO, Milestone.class);
-  }
 }

@@ -4,25 +4,17 @@ import com.roadmap.backendapi.dto.ResourceDTO;
 import com.roadmap.backendapi.model.Resource;
 import lombok.RequiredArgsConstructor;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-@Component
+import java.util.List;
 
-public class ResourceMapper  implements IResourceMapper{
-    private final ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface ResourceMapper {
+    ResourceMapper INSTANCE = Mappers.getMapper(ResourceMapper.class);
 
-    public ResourceMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-    }
-
-    @Override
-    public ResourceDTO toDTO(Resource resource) {
-        return modelMapper.map(resource, ResourceDTO.class);
-    }
-
-    @Override
-    public Resource toEntity(ResourceDTO resourceDTO) {
-        return modelMapper.map(resourceDTO, Resource.class);
-    }
+    ResourceDTO toDTO(Resource resource);
 }

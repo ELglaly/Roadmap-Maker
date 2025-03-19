@@ -2,14 +2,14 @@ package com.roadmap.backendapi.model;
 
 import com.roadmap.backendapi.model.enums.ResourceType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Setter
+@Getter
 public class Resource {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -22,7 +22,7 @@ public class Resource {
     @Column(nullable = false,columnDefinition = "TEXT")
     private String url;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "milestone_id",nullable = false)
     private Milestone milestone;
 }
