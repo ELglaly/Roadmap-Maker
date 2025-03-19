@@ -27,7 +27,7 @@ public class Roadmap {
     @JoinColumn(name = "user_id",nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "roadmap",orphanRemoval = true,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "roadmap",fetch = FetchType.LAZY,orphanRemoval = true,cascade = CascadeType.ALL)
     private List<Milestone> milestones;
 
 }

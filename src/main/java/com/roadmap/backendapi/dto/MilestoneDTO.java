@@ -29,7 +29,6 @@ public class MilestoneDTO {
 
     private MilestoneStatus status;
 
-    private RoadmapDTO roadmapDTO;
 
     private List<ResourceDTO> resourcesDTO;
 
