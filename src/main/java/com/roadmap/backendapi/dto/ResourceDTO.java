@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.dto;
 
-import com.roadmap.backendapi.model.enums.ResourceType;
+import com.roadmap.backendapi.entity.enums.ResourceType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
