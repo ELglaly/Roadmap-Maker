@@ -2,24 +2,22 @@ package com.roadmap.backendapi.service.user;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.exception.user.UserNotFoundException;
-import com.roadmap.backendapi.mapper.IUserMapper;
 import com.roadmap.backendapi.mapper.UserMapper;
-import com.roadmap.backendapi.model.User;
+import com.roadmap.backendapi.entity.User;
 import com.roadmap.backendapi.repository.UserRepository;
 import com.roadmap.backendapi.request.user.CreateUserRequest;
 import com.roadmap.backendapi.request.user.UpdateUserRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-public class UserService implements IUseService {
+public class UserServiceImpl implements UseService {
 
-    private final IUserMapper userMapper;
+    private final UserMapper userMapper;
     private final   UserRepository userRepository;
 
-    public UserService(IUserMapper userMapper, UserRepository userRepository) {
+    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
     }
@@ -28,9 +26,7 @@ public class UserService implements IUseService {
     public UserDTO getUserById(Long userId) {
         User  user =userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
-
-        UserDTO userDTO = userMapper.toDTO(user);
-        return userDTO;
+        return userMapper.toDTO(user);
     }
 
     public UserDTO getUserByEmail(String email) {
