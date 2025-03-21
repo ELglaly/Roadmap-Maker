@@ -1,7 +1,7 @@
 package com.roadmap.backendapi.dto;
 
-import com.roadmap.backendapi.model.Address;
-import com.roadmap.backendapi.model.PhoneNumber;
+import com.roadmap.backendapi.entity.Address;
+import com.roadmap.backendapi.entity.PhoneNumber;
 import lombok.*;
 
 import java.util.List;
@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
+@ToString
 public class UserDTO {
     private Long id;
     private String firstName;

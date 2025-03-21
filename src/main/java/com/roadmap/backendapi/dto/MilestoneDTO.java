@@ -1,8 +1,7 @@
 package com.roadmap.backendapi.dto;
 
 
-import com.roadmap.backendapi.model.enums.MilestoneStatus;
-import jakarta.persistence.Column;
+import com.roadmap.backendapi.entity.enums.MilestoneStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
