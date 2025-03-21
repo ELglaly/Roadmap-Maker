@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class ProgressService implements IProgressService {
+public class ProgressServiceImpl implements ProgressService {
 
     private final ProgressRepository progressRepository;
     private final ProgressMapper progressMapper;
 
-    public ProgressService(ProgressRepository progressRepository, ProgressMapper progressMapper) {
+    public ProgressServiceImpl(ProgressRepository progressRepository, ProgressMapper progressMapper) {
         this.progressRepository = progressRepository;
         this.progressMapper = progressMapper;
     }
