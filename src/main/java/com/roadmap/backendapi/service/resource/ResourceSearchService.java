@@ -4,7 +4,7 @@ import com.roadmap.backendapi.dto.ResourceDTO;
 
 import java.util.List;
 
-public interface IResourceSearchService {
+public interface ResourceSearchService {
     ResourceDTO getResourceById(Long resourceId);
     ResourceDTO getResourceByTitle(String title);
     ResourceDTO getResourceByType(String type);
