@@ -1,4 +1,4 @@
-package com.roadmap.backendapi.model;
+package com.roadmap.backendapi.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -6,7 +6,6 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

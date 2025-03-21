@@ -1,12 +1,10 @@
-package com.roadmap.backendapi.model;
+package com.roadmap.backendapi.entity;
 
-import com.roadmap.backendapi.model.enums.MilestoneStatus;
+import com.roadmap.backendapi.entity.enums.MilestoneStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.json.JSONArray;
-import org.json.JSONPropertyIgnore;
 
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 @Setter
@@ -15,6 +13,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class Milestone {
 
     @Id
@@ -28,7 +27,7 @@ public class Milestone {
     private String description;
 
     //@Column(nullable = false)
-    private Timestamp dueDate;
+    private Date dueDate;
 
     @Column(nullable = false,columnDefinition = "TEXT")
     private String actionableSteps;

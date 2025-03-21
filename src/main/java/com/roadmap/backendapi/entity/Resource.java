@@ -1,6 +1,6 @@
-package com.roadmap.backendapi.model;
+package com.roadmap.backendapi.entity;
 
-import com.roadmap.backendapi.model.enums.ResourceType;
+import com.roadmap.backendapi.entity.enums.ResourceType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +22,8 @@ public class Resource {
     @Column(nullable = false,columnDefinition = "TEXT")
     private String url;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "milestone_id",nullable = false)
     private Milestone milestone;
+
 }
