@@ -2,11 +2,8 @@ package com.roadmap.backendapi.controller;
 
 
 import com.roadmap.backendapi.dto.MilestoneDTO;
-import com.roadmap.backendapi.dto.RoadmapDTO;
 import com.roadmap.backendapi.response.APIResponse;
-import com.roadmap.backendapi.service.milestone.IMilestoneService;
 import com.roadmap.backendapi.service.milestone.MilestoneService;
-import com.roadmap.backendapi.service.roadmap.RoadmapService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +16,9 @@ import java.util.List;
 @RequestMapping("/api/v1/milestone")
 public class MilestoneController {
 
-    private final IMilestoneService milestoneService;
+    private final MilestoneService milestoneService;
 
-    public MilestoneController( IMilestoneService milestoneService) {
+    public MilestoneController( MilestoneService milestoneService) {
         this.milestoneService = milestoneService;
     }
 

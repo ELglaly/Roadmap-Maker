@@ -1,6 +1,5 @@
 package com.roadmap.backendapi.controller;
 
-import com.nimbusds.oauth2.sdk.ParseException;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.http.HttpStatus;
@@ -12,16 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.response.APIResponse;
-import com.roadmap.backendapi.service.user.IUseService;
+import com.roadmap.backendapi.service.user.UseService;
 import org.springframework.ai.chat.client.ChatClient;
 
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
-    private final IUseService userService;
+    private final UseService userService;
     private final  ChatClient  chatClient;
 
-    public UserController(IUseService userService, ChatClient chatClient, ChatClient chatClient1) {
+    public UserController(UseService userService, ChatClient chatClient, ChatClient chatClient1) {
         this.userService = userService;
         this.chatClient = chatClient1;
     }
