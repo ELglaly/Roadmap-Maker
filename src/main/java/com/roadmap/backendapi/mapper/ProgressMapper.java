@@ -1,27 +1,17 @@
 package com.roadmap.backendapi.mapper;
 
 import com.roadmap.backendapi.dto.ProgressDTO;
-import com.roadmap.backendapi.model.Progress;
-import lombok.RequiredArgsConstructor;
+import com.roadmap.backendapi.entity.Progress;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
 
 
-@Component
+@Mapper(componentModel = "spring")
+public interface ProgressMapper {
 
-public class ProgressMapper {
+    ProgressMapper INSTANCE = Mappers.getMapper(ProgressMapper.class);
 
-    private final ModelMapper modelMapper;
+    ProgressDTO toDTO(Progress progress);
 
-    public ProgressMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-    }
-
-    public ProgressDTO toDTO(Progress progress) {
-        return modelMapper.map(progress, ProgressDTO.class);
-    }
-    public Progress toEntity(ProgressDTO progressDTO) {
-        return modelMapper.map(progressDTO, Progress.class);
-    }
 }

@@ -1,16 +1,11 @@
 package com.roadmap.backendapi.mapper;
 
 import com.roadmap.backendapi.dto.MilestoneDTO;
-import com.roadmap.backendapi.model.Milestone;
-import lombok.RequiredArgsConstructor;
+import com.roadmap.backendapi.entity.Milestone;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface MilestoneMapper {
