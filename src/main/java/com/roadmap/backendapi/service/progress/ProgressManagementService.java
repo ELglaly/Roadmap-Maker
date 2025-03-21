@@ -4,7 +4,7 @@ import com.roadmap.backendapi.dto.ProgressDTO;
 import com.roadmap.backendapi.request.progress.CreateProgressRequest;
 import com.roadmap.backendapi.request.progress.UpdateProgressRequest;
 
-public interface IProgressManagementService {
+public interface ProgressManagementService {
     ProgressDTO updateProgress(UpdateProgressRequest request);
     ProgressDTO createProgress(CreateProgressRequest request);
     void deleteProgress(Long progressId);
