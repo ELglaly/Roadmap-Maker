@@ -1,8 +1,11 @@
 package com.roadmap.backendapi.repository;
 
-import com.roadmap.backendapi.model.Roadmap;
-import com.roadmap.backendapi.model.User;
+import com.roadmap.backendapi.entity.Roadmap;
+import com.roadmap.backendapi.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface RoadmapRepository extends JpaRepository<Roadmap, Long> {
     Roadmap findByTitle(String title);
@@ -10,7 +13,9 @@ public interface RoadmapRepository extends JpaRepository<Roadmap, Long> {
     Roadmap findByUser(User user);
     Boolean existsByUserId(Long userId);
 
-    Roadmap findByUserId(Long userId);
+    List<Roadmap> findByUserId(Long userId);
 
-    Object findByMilestonesId(Long milestoneId);
+
+    //@Query("SELECT r FROM Roadmap r WHERE r.title LIKE %?1%")
+    List<Roadmap> findByTitleContaining(String title);
 }
