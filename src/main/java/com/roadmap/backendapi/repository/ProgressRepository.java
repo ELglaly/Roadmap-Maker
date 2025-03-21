@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.repository;
 
-import com.roadmap.backendapi.model.Progress;
+import com.roadmap.backendapi.entity.Progress;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProgressRepository extends JpaRepository<Progress, Long> {

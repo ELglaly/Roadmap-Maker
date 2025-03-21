@@ -1,8 +1,7 @@
 package com.roadmap.backendapi.repository;
 
-import com.roadmap.backendapi.dto.ResourceDTO;
-import com.roadmap.backendapi.model.Resource;
-import com.roadmap.backendapi.model.enums.ResourceType;
+import com.roadmap.backendapi.entity.Resource;
+import com.roadmap.backendapi.entity.enums.ResourceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

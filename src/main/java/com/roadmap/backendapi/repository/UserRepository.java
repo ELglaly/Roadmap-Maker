@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.repository;
 
-import com.roadmap.backendapi.model.User;
+import com.roadmap.backendapi.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
