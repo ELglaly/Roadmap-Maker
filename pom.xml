@@ -143,6 +143,12 @@
 			<artifactId>json</artifactId>
 			<version>20250107</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-websocket -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+			<version>3.4.3</version>
+		</dependency>
 
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>
@@ -153,14 +159,14 @@
 		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
-			<version>1.6.3</version>
+			<version>1.6.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.mapstruct/mapstruct-processor -->
 		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct-processor</artifactId>
-			<version>1.6.3</version>
+			<version>1.6.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok-mapstruct-binding -->
