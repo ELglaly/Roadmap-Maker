@@ -1,4 +1,4 @@
-package com.roadmap.backendapi.model.enums;
+package com.roadmap.backendapi.entity.enums;
 
 public enum MilestoneStatus {
         NOT_STARTED,

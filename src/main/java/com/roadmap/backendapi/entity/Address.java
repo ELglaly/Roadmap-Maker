@@ -1,4 +1,4 @@
-package com.roadmap.backendapi.model;
+package com.roadmap.backendapi.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
