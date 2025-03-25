@@ -1,4 +1,4 @@
 package com.roadmap.backendapi.request.user;
 
-public class UpdatePhoneNumberRequest {
+public class PhoneNumberRequest {
 }
