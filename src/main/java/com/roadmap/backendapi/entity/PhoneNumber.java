@@ -1,14 +1,14 @@
 package com.roadmap.backendapi.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
+@Setter
+@Getter
 public class PhoneNumber {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
