@@ -20,7 +20,7 @@ public class UserRegistrationValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return RegistrationRequest.class.equals(clazz);
+        return User.class.equals(clazz);
     }
 
     @Override
