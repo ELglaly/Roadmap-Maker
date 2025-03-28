@@ -34,7 +34,9 @@ public class UserServiceImpl implements UseService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
 
-    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator, UserUpdateValidator userUpdateValidator, PasswordEncoder passwordEncoder, PasswordValidator passwordValidator) {
+    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
+                           UserUpdateValidator userUpdateValidator, PasswordEncoder passwordEncoder,
+                           PasswordValidator passwordValidator) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.userRegistrationValidator = userRegistrationValidator;
