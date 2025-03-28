@@ -22,28 +22,26 @@ public class UserUpdateValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return UpdateUserRequest.class.equals(clazz);
+        return User.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        UpdateUserRequest updateUserRequest = (UpdateUserRequest) target;
+        User updateUserRequest = (User) target;
 
-        User user = userMapper.toEntity(updateUserRequest);
+        ValidationUtils.invokeValidator(validateUserCommon, updateUserRequest, errors);
 
-        ValidationUtils.invokeValidator(validateUserCommon, user, errors);
-
-        if (user.getPhoneNumber() != null) {
-            BindingResult phoneErrors = new BeanPropertyBindingResult(user.getPhoneNumber(), errors.getObjectName());
-            ValidationUtils.invokeValidator(phoneNumberValidator, user.getPhoneNumber(), phoneErrors);
+        if (updateUserRequest.getPhoneNumber() != null) {
+            BindingResult phoneErrors = new BeanPropertyBindingResult(updateUserRequest.getPhoneNumber(), errors.getObjectName());
+            ValidationUtils.invokeValidator(phoneNumberValidator, updateUserRequest.getPhoneNumber(), phoneErrors);
             if (phoneErrors.hasErrors()) {
                 errors.addAllErrors(phoneErrors);
             }
         }
 
-        if (user.getAddress() != null) {
-            BindingResult addressErrors = new BeanPropertyBindingResult(user.getAddress(), errors.getObjectName());
-            ValidationUtils.invokeValidator(addressValidator, user.getAddress(), addressErrors);
+        if (updateUserRequest.getAddress() != null) {
+            BindingResult addressErrors = new BeanPropertyBindingResult(updateUserRequest.getAddress(), errors.getObjectName());
+            ValidationUtils.invokeValidator(addressValidator, updateUserRequest.getAddress(), addressErrors);
             if (addressErrors.hasErrors()) {
                 errors.addAllErrors(addressErrors);
             }
