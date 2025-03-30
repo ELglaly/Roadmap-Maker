@@ -6,6 +6,7 @@ import com.roadmap.backendapi.request.user.LoginRequest;
 public interface UserSearchService {
     UserDTO getUserById(Long userId);
     String loginUser(LoginRequest loginRequest);
+    void logoutUser(String token);
     UserDTO getUserByEmail(String email);
     UserDTO getUserByUsername(String username);
 }
