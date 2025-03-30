@@ -1,5 +1,6 @@
 package com.roadmap.backendapi.entity;
 
+import com.roadmap.backendapi.entity.enums.UserRoles;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +35,13 @@ public class User {
     private String interests;
     @Column(nullable = false,columnDefinition = "TEXT")
     private String skills ;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,columnDefinition = "ENUM('ADMIN','USER','GUEST')")
+    private UserRoles role;
+
+    @Column(nullable = false)
+    private boolean enabled;
 
     @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
     private Address address;
