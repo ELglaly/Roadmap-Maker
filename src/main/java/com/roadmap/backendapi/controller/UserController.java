@@ -5,6 +5,7 @@ import com.roadmap.backendapi.exception.user.UserValidationException;
 import com.roadmap.backendapi.request.user.LoginRequest;
 import com.roadmap.backendapi.request.user.RegistrationRequest;
 import com.roadmap.backendapi.request.user.UpdateUserRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -61,14 +62,25 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login")
+    @GetMapping("/login")
     public ResponseEntity<APIResponse> login(@RequestBody LoginRequest loginRequestDTO) {
+        // Implement login and return token as response header
         try {
             String  token = userService.loginUser(loginRequestDTO);
-            return ResponseEntity.ok(new APIResponse("User logged in successfully", token));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new APIResponse("User login failed: " , e.getMessage()));
+            return ResponseEntity.ok().header("Authorization", "Bearer "+token)
+                    .body(new APIResponse("User logged in successfully", null));
+        } catch (AppException e) {
+            return ResponseEntity.status(e.getStatus())
+                    .body(new APIResponse("User login failed: "+e.getMessage() ,null ));
         }
+    }
+    @GetMapping("/logout")
+    public ResponseEntity<APIResponse> logout(HttpServletRequest request) {
+        // Implement logout
+        String token = request.getHeader("Authorization");
+        token = token.substring(7);
+        userService.logoutUser(token);
+        return ResponseEntity.ok(new APIResponse("User logged out successfully", null));
     }
 
     @DeleteMapping("/{id}")
