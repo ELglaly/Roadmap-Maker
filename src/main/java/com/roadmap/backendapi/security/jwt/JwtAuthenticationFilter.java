@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.roadmap.backendapi.exception.user.AlreadyLoggedOutException;
 import com.roadmap.backendapi.exception.user.AuthenticationException;
 import com.roadmap.backendapi.exception.user.unsuccessfulAuthentication;
-import com.roadmap.backendapi.security.UserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +12,7 @@ import org.hibernate.annotations.Filter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -54,25 +54,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 2. JWT extraction
             final String jwt = parseJwt(request);
             if (jwt == null) {
-                throw new AuthenticationException("Missing or invalid JWT token");
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.getWriter().write("MISSING JWT TOKEN");
+                return;
             }
 
             // 3. Token validation
             String username = jwtService.getUsername(jwt);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = (UserDetails) userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                 if (jwtService.validateToken(jwt, userDetails)) {
                     setAuthenticationInContext(request, userDetails);
                     if(jwtService.isWithinLogoutTime(jwt)){
-                        throw new AlreadyLoggedOutException("User is already logged out");
+                        response.setStatus(HttpStatus.BAD_REQUEST.value());
+                        response.getWriter().write("User is already logged out");
+                        return;
                     }
                     else if (jwtService.isTokenExpired(jwt)) {
                         jwtService.handleTokenRefresh(response, jwt);
                     }
                 }
             } else {
-                throw new AuthenticationException("Missing or invalid JWT token");
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                // add body to the response to contain the error message in a JSON format
+                response.getWriter().write("INVALID JWT TOKEN");
+                return;
             }
 
             // 4. Security headers
