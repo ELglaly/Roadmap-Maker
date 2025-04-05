@@ -1,10 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Profile</title>
 </head>
 <body>
-$END$
+    <h1>User Profile</h1>
+    <div id="profile">
+        <p><strong>First Name:</strong> <span id="firstName"></span></p>
+        <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+        <p><strong>Email:</strong> <span id="email"></span></p>
+        <p><strong>Username:</strong> <span id="username"></span></p>
+        <p><strong>State:</strong> <span id="state"></span></p>
+    </div>
+    <button id="fetchUpdateButton">Fetch and Update Data</button>
+
+    <script>
+        document.getElementById('fetchUpdateButton').addEventListener('click', function() {
+            fetch('/api/v1/users/1')
+                .then(response => response)
+                .then(data => {
+                    document.getElementById('firstName').textContent = data.firstName;
+                    document.getElementById('lastName').textContent = data.lastName;
+                    document.getElementById('email').textContent = data.email;
+                    document.getElementById('username').textContent = data.username;
+                    document.getElementById('state').textContent = data.address.state;
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
 </body>
 </html>
