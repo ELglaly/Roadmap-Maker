@@ -8,9 +8,8 @@ const Login = () => {
     event.preventDefault();
     try {
         const response = await fetch("http://localhost:8080/api/v1/users/1/")
-    }
-    console.log('Username:', username);
-    console.log('Password:', password);
+      console.log(response);
+    } catch (error) {
     // Here you would typically make an API call to authenticate the user
   };
 
@@ -48,4 +47,4 @@ const Login = () => {
 
 
 
-export default Login;
+export default Login ;}
