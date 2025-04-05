@@ -2,15 +2,22 @@ package com.roadmap.backendapi.security.jwt;
 
 import com.roadmap.backendapi.entity.User;
 import com.roadmap.backendapi.exception.user.AlreadyLoggedInException;
-import com.roadmap.backendapi.security.UserDetails;
+import com.roadmap.backendapi.exception.user.InvalidTokenException;
+import com.roadmap.backendapi.exception.user.TokenGenerationException;
 import com.roadmap.backendapi.security.jwt.tokenstore.TokenStore;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.InvalidKeyException;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,7 +29,7 @@ public class JwtService {
     // Add JWT service implementation here
     private static String secretKey="";
     private static final long validityInMilliseconds = 60*60*1000; // 1h
-    private static final long logoutTimeInMilliseconds = 60*1000; // 1m
+    private static final long logoutTimeInMilliseconds = 60*60*1000; // 1m
     private final TokenStore tokenStore;
     // implement the jwt service here
 
@@ -41,105 +48,110 @@ public class JwtService {
     }
 
 
-    public String generateToken(String username) {
+    public String generateToken(String username)  throws TokenGenerationException {
+            // 1. Validate input
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("Username cannot be null or blank");
+            }
+            if (validityInMilliseconds <= 0) {
+                throw new IllegalArgumentException("Token validity must be positive");
+            }
 
-        if (tokenStore.isUserLoggedIn(username)) {
-            throw new AlreadyLoggedInException("User is already logged in");
+            // 2. Prepare claims
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("username", username);
+
+            try {
+                // 3. Build token
+                Instant now = Instant.now();
+                String token = Jwts.builder()
+                        .claims(claims)
+                        .subject(username)
+                        .issuedAt(Date.from(now))
+                        .expiration(Date.from(now.plusMillis(validityInMilliseconds)))
+                        .signWith(getKey())
+                        .compact();
+
+                // 4. Persist token
+                tokenStore.saveToken(token, username);
+                return token;
+
+            } catch (JwtException e) {
+                throw new TokenGenerationException("Failed to generate token");
+            }
         }
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("username", username);
-        String token= Jwts.builder()
-                .claims(claims)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
-                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .compact();
-        tokenStore.saveToken(token, username);
-        return token;
+    private  SecretKey getKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
-    public String getUsername(String token) {
-        // implement the method here
-        return Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("username", String.class);
-    }
+    public String getUsername(String token) throws InvalidTokenException {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
 
-    public String getEmail(String token) {
-        // implement the method here
+            String username = claims.get("username", String.class);
+            if (username == null) {
+                throw new InvalidTokenException("Missing username claim");
+            }
+            return username;
 
-        return Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("email", String.class);
-    }
-
-    public String getRole(String token) {
-        // implement the method here
-
-        return Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("role", String.class);
-    }
-    public Long getId(String token) {
-        // implement the method here
-
-        return Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("id", Long.class);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException("Token validation failed");
+        }
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        // implement the method here
-        return userDetails.getUsername().equals(getUsername(token))&& tokenStore.getToken(userDetails.getUsername()).equals(token);
+        return userDetails.getUsername().equals(getUsername(token))&&
+                tokenStore.getToken(userDetails.getUsername()).equals(token);
     }
 
     public boolean isTokenExpired(String token) {
-        return Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration()
-                .before(new Date());
+        try {
+            return Jwts.parser()
+                    .verifyWith(getKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration()
+                    .before(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
     public boolean isWithinLogoutTime(String token) {
-        Date expiration = Jwts.parser()
-                .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .build().parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
-        return new Date().before(new Date(expiration.getTime() + logoutTimeInMilliseconds));
+        try {
+            Date expiration = Jwts.parser()
+                    .verifyWith(getKey())
+                    .build().parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
+            return new Date().before(new Date(expiration.getTime() + logoutTimeInMilliseconds));
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
     public String refreshToken(String token) {
         // implement the method here
         if (isTokenExpired(token)) {
-            return Jwts.builder()
-                    .claims(Jwts.parser()
-                            .verifyWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                            .build()
-                            .parseSignedClaims(token)
-                            .getPayload())
-                    .issuedAt(new Date(System.currentTimeMillis()))
-                    .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
-                    .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes()))
-                    .compact();
+            try {
+                return Jwts.builder()
+                        .claims(Jwts.parser()
+                                .verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload())
+                        .issuedAt(new Date(System.currentTimeMillis()))
+                        .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
+                        .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                        .compact();
+            } catch (JwtException | IllegalArgumentException e) {
+                return "";
+            }
         }
-        return null;
+        return "";
     }
-
-
     public void handleTokenRefresh(HttpServletResponse response, String jwt) {
         // implement the method here
         response.setHeader("Authorization", "Bearer " + refreshToken(jwt));
