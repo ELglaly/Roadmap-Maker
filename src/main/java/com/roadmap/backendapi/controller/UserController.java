@@ -1,25 +1,23 @@
 package com.roadmap.backendapi.controller;
 
 import com.roadmap.backendapi.exception.AppException;
+import com.roadmap.backendapi.exception.user.InvalidTokenException;
 import com.roadmap.backendapi.exception.user.UserValidationException;
 import com.roadmap.backendapi.request.user.LoginRequest;
 import com.roadmap.backendapi.request.user.RegistrationRequest;
 import com.roadmap.backendapi.request.user.UpdateUserRequest;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.*;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.response.APIResponse;
@@ -70,17 +68,40 @@ public class UserController {
             return ResponseEntity.ok().header("Authorization", "Bearer "+token)
                     .body(new APIResponse("User logged in successfully", null));
         } catch (AppException e) {
-            return ResponseEntity.status(e.getStatus())
-                    .body(new APIResponse("User login failed: "+e.getMessage() ,null ));
+                return ResponseEntity.status(e.getStatus())
+                    .body(new APIResponse("User login failed: "+e.getMessage() + e.toString() ,e ));
         }
     }
     @GetMapping("/logout")
-    public ResponseEntity<APIResponse> logout(HttpServletRequest request) {
-        // Implement logout
-        String token = request.getHeader("Authorization");
-        token = token.substring(7);
-        userService.logoutUser(token);
-        return ResponseEntity.ok(new APIResponse("User logged out successfully", null));
+    public ResponseEntity<APIResponse> logout(
+            HttpServletRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        // 1. Validate Authorization header
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new APIResponse("Missing or invalid Authorization header", null));
+        }
+
+        try {
+            // 2. Extract token
+            String token = authHeader.substring(7);
+
+            // 3. Perform logout
+            userService.logoutUser(token);
+
+            // 4. Return success response
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(new APIResponse("User logged out successfully", null));
+
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.badRequest()
+                    .body(new APIResponse("Invalid token", null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new APIResponse("Logout processing failed", null));
+        }
     }
 
     @DeleteMapping("/{id}")
