@@ -6,6 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+/**
+ * Repository interface for managing Resource entities.
+ * This interface extends JpaRepository to provide CRUD operations
+ * and custom query methods for Resource entities.
+ *
+ * @see com.roadmap.backendapi.entity.Resource
+ * @see org.springframework.data.jpa.repository.JpaRepository
+ */
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
     Resource findByTitle(String title);
     Boolean existsByTitle(String title);

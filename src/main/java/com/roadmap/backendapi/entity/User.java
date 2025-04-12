@@ -6,6 +6,14 @@ import lombok.*;
 
 import java.util.List;
 
+/**
+ * Entity class representing a User.
+ * This class is used to map the User table in the database.
+ * It contains fields that represent the properties of a User.
+ *
+ * @see com.roadmap.backendapi.entity.Progress
+ * @see com.roadmap.backendapi.entity.Roadmap
+ */
 @Entity
 @Builder
 @NoArgsConstructor

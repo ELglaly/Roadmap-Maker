@@ -7,6 +7,14 @@ import java.util.Date;
 import java.util.List;
 
 
+/**
+ * Entity class representing a Roadmap.
+ * This class is used to map the Roadmap table in the database.
+ * It contains fields that represent the properties of a Roadmap.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.entity.Milestone
+ */
 @Setter
 @Getter
 @Entity

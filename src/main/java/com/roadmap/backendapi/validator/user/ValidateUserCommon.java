@@ -7,6 +7,10 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
+/**
+ * ValidateUserCommon is a Spring Validator that validates the common fields of a User object.
+ * It checks if the fields are not null or empty and if they match specific formats.
+ */
 @Component
 public class ValidateUserCommon implements Validator {
 
@@ -23,6 +27,12 @@ public class ValidateUserCommon implements Validator {
         return User.class.equals(clazz);
     }
 
+    /**
+     * Validates the User object.
+     *
+     * @param target the object to validate
+     * @param errors the Errors object to hold validation errors
+     */
     @Override
     public void validate(Object target, Errors errors) {
         User user = (User) target;
@@ -61,6 +71,12 @@ public class ValidateUserCommon implements Validator {
         }
     }
 
+    /**
+     * Checks if the value is null or empty.
+     *
+     * @param value the value to check
+     * @return true if the value is null or empty, false otherwise
+     */
     private boolean valueNullOrEmpty(String value) {
         return value != null && !value.isEmpty();
     }

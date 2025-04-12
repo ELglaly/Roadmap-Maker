@@ -11,6 +11,10 @@ import org.springframework.validation.Validator;
 
 import java.util.List;
 
+/**
+ * EmailValidator is a Spring Validator that validates email addresses.
+ * It checks if the email is not empty, has a valid format, and does not already exist in the database.
+ */
 @Component
 public class EmailValidator implements Validator {
 
@@ -25,6 +29,12 @@ public class EmailValidator implements Validator {
         return String.class.equals(clazz); // Validate the email string directly
     }
 
+    /**
+     * Validates the email address.
+     *
+     * @param target the email address to validate
+     * @param errors the Errors object to hold validation errors
+     */
     @Override
     public void validate(Object target, Errors errors) {
             String email = (String) target;
@@ -40,6 +50,12 @@ public class EmailValidator implements Validator {
         }
 
 
+        /**
+         * Checks if the email address is valid.
+         *
+         * @param email the email address to check
+         * @return true if the email address is valid, false otherwise
+         */
         private boolean isValidEmail (String email){
             // Basic email validation regex (you can use a more robust one)
             String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";

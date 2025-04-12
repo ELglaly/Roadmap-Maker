@@ -7,6 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
+/**
+ * Repository interface for managing Roadmap entities.
+ * This interface extends JpaRepository to provide CRUD operations
+ * and custom query methods for Roadmap entities.
+ *
+ * @see com.roadmap.backendapi.entity.Roadmap
+ * @see org.springframework.data.jpa.repository.JpaRepository
+ */
 public interface RoadmapRepository extends JpaRepository<Roadmap, Long> {
     Roadmap findByTitle(String title);
     Boolean existsByTitle(String title);

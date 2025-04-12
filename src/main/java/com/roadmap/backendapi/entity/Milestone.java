@@ -7,6 +7,13 @@ import lombok.*;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Entity class representing a Milestone.
+ * This class is used to map the Milestone entity to the database table.
+ *
+ * @see com.roadmap.backendapi.entity.Roadmap
+ * @see com.roadmap.backendapi.entity.enums.MilestoneStatus
+ */
 @Setter
 @Getter
 @Entity

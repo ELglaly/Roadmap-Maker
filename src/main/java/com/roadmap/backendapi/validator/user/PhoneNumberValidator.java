@@ -12,6 +12,10 @@ import org.springframework.validation.Validator;
 
 import java.util.List;
 
+/**
+ * PhoneNumberValidator is a Spring Validator that validates phone numbers.
+ * It checks if the phone number is not empty, has a valid format, and does not already exist in the database.
+ */
 @Component
 public class PhoneNumberValidator implements Validator {
     private final PhoneNumberRepository phoneNumberRepository;
@@ -25,6 +29,12 @@ public class PhoneNumberValidator implements Validator {
         return PhoneNumber.class.equals(clazz);
     }
 
+    /**
+     * Validates the PhoneNumber object.
+     *
+     * @param target the object to validate
+     * @param errors the Errors object to hold validation errors
+     */
     @Override
     public void validate(Object target, Errors errors) {
         PhoneNumber phoneNumber = (PhoneNumber) target;
@@ -45,10 +55,22 @@ public class PhoneNumberValidator implements Validator {
         }
     }
 
+    /**
+     * Checks if a country code is not a valid number.
+     *
+     * @param countryCode the country code to check
+     * @return true if the country code is not valid, false otherwise
+     */
     private boolean notNumber(String countryCode) {
         return !countryCode.matches("^\\+[0-9]+$");
     }
 
+    /**
+     * Checks if a value is null or empty.
+     *
+     * @param value the value to check
+     * @return true if the value is null or empty, false otherwise
+     */
     private boolean valueNullOrEmpty(String value) {
         return value != null && !value.isEmpty();
     }

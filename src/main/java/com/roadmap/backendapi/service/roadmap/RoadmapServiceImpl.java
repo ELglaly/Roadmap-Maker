@@ -29,6 +29,10 @@ import java.net.http.WebSocket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RoadmapServiceImpl is a service class that implements the RoadmapService interface.
+ * It provides methods for managing and searching roadmaps.
+ */
 @Service
 public class RoadmapServiceImpl implements RoadmapService {
 
@@ -52,6 +56,14 @@ public class RoadmapServiceImpl implements RoadmapService {
         this.milestoneRepository = milestoneRepository;
         this.resourceRepository = resourceRepository;
     }
+
+    /**
+     * Generates a roadmap for a user based on their profile.
+     * It fetches the user, generates the roadmap using the ChatClient, and saves it to the database.
+     *
+     * @param userId the ID of the user for whom to generate the roadmap
+     * @return the generated roadmap as a RoadmapDTO
+     */
 public RoadmapDTO generateRoadmap(Long userId) {
     // Step 1: Fetch the user
     User user = userRepository.findById(userId)
@@ -80,6 +92,13 @@ public RoadmapDTO generateRoadmap(Long userId) {
 
     return roadMapMapper.toDTO(generatedRoadmap);
 }
+
+    /**
+     * Generates a prompt for the ChatClient to create a detailed roadmap based on the user's profile.
+     *
+     * @param user the user for whom to generate the roadmap
+     * @return the generated prompt
+     */
     private String getCompleteRoadmapPrompt(User user) {
         if (user == null || user.getGoal() == null || user.getInterests() == null || user.getSkills() == null) {
                 throw  new  UserDataRequiredException();
@@ -147,11 +166,22 @@ public RoadmapDTO generateRoadmap(Long userId) {
     }
 
 
+    /**
+     * Updates a roadmap for a user.
+     * @param request the request containing the updated roadmap details
+     * @return the updated roadmap as a RoadmapDTO
+     */
     @Override
     public RoadmapDTO updateRoadmap(UpdateRoadmapRequest request) {
         return null;
     }
 
+
+    /**
+     * Deletes a roadmap with the given ID.
+     *
+     * @param roadmapId the ID of the roadmap to delete
+     */
     @Override
     public void deleteRoadmap(Long roadmapId) {
         if(roadmapRepository.existsById(roadmapId))
@@ -160,6 +190,12 @@ public RoadmapDTO generateRoadmap(Long userId) {
             throw new RoadMapNotFoundException();
     }
 
+    /**
+     * Retrieves a roadmap by its ID.
+     *
+     * @param roadmapId the ID of the roadmap to retrieve
+     * @return the retrieved roadmap as a RoadmapDTO
+     */
     @Override
     public RoadmapDTO getRoadmapById(Long roadmapId) {
         return roadmapRepository.findById(roadmapId)
@@ -167,6 +203,13 @@ public RoadmapDTO generateRoadmap(Long userId) {
                 .orElseThrow(RoadMapNotFoundException::new);
     }
 
+
+    /**
+     * Retrieves a roadmap by its user ID.
+     *
+     * @param userId the ID of the user whose roadmap to retrieve
+     * @return a list of roadmaps associated with the user
+     */
     @Override
     public List<RoadmapDTO> getRoadmapByUserId(Long userId) {
         return roadmapRepository.findByUserId(userId)
@@ -174,6 +217,12 @@ public RoadmapDTO generateRoadmap(Long userId) {
                 .toList();
     }
 
+    /**
+     * Retrieves a roadmap by its title.
+     *
+     * @param title the title of the roadmap to retrieve
+     * @return a list of roadmaps matching the title
+     */
     @Override
     public List<RoadmapDTO> getRoadmapByTitle(String title) {
         return roadmapRepository.findByTitleContaining(title).stream()

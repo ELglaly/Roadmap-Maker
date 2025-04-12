@@ -14,6 +14,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * UserDetails class implements Spring Security's UserDetails interface.
+ * It represents the authenticated user's details, including username, password,
+ * email, and authorities (roles).
+ *
+ * @see org.springframework.security.core.userdetails.UserDetails
+ */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +34,12 @@ public class UserDetails implements org.springframework.security.core.userdetail
     private Collection<GrantedAuthority> authorities;
 
 
+    /**
+     * Converts a User entity to UserDetails.
+     *
+     * @param user the User entity
+     * @return UserDetails object
+     */
 
     public static UserDetails userBuilder(User user) {
 

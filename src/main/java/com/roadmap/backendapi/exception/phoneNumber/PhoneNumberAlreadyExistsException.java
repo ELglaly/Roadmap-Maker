@@ -7,6 +7,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
+/**
+ * Exception thrown when a phone number already exists.
+ * This exception is used to indicate that the phone number being added or updated
+ * already exists in the system.
+ *
+ * @see com.roadmap.backendapi.entity.PhoneNumber
+ */
 @ResponseStatus(HttpStatus.CONFLICT)
 public class PhoneNumberAlreadyExistsException extends AppException {
     public PhoneNumberAlreadyExistsException() {

@@ -4,6 +4,13 @@ import com.roadmap.backendapi.exception.AppException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * Exception thrown when user data is required for generating a roadmap.
+ * This exception is used to indicate that the user details (goal, interests, skills)
+ * are required for generating a roadmap.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ */
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class UserDataRequiredException extends AppException {
     public UserDataRequiredException() {

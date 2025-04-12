@@ -20,6 +20,10 @@ import org.springframework.web.client.ResourceAccessException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * MilestoneServiceImpl is a service class that implements the MilestoneService interface.
+ * It provides methods for managing and searching milestones in a roadmap.
+ */
 @Service
 public class MilestoneServiceImpl implements MilestoneService {
 
@@ -37,10 +41,18 @@ public class MilestoneServiceImpl implements MilestoneService {
         this.roadmapRepository = roadmapRepository;
     }
 
+    /**
+     * Updates the milestones for a given roadmap.
+     * It generates new milestones using the ChatClient and saves them to the database.
+     *
+     * @param roadmap the roadmap for which to update milestones
+     */
     @Override
     public void updateMilestones(Roadmap roadmap) {
+        // prompt the user to generate milestones
         String prompt = getMilestonePrompt(roadmap);
         List<Milestone> milestones = null;
+        // Call the chat client to generate milestones based on the prompt
         try {
             milestones = chatClient.prompt(prompt).call().entity(new ParameterizedTypeReference<List<Milestone>>() {
             });
@@ -58,11 +70,17 @@ public class MilestoneServiceImpl implements MilestoneService {
         milestoneRepository.saveAll(milestones);
     }
 
+    /**
+     * Generates a prompt for the ChatClient to create milestones based on the user's data and roadmap details.
+     *
+     * @param roadmap the roadmap containing user data and roadmap details
+     * @return the generated prompt
+     */
     private String getMilestonePrompt(Roadmap roadmap) {
         return String.format(
                 """
                         You are a roadmap milestone generator. Your task is to create a detailed, personalized, and actionable roadmap with milestones based on the user's goal, interests, skills, and the roadmap's title and description. Each milestone should be specific, realistic, and logically ordered to help the user achieve their goal.
-
+                        
                         Here is the user's data:
                         - **Goal**: %s
                         - **Interests**: %s
@@ -91,13 +109,19 @@ public class MilestoneServiceImpl implements MilestoneService {
                         - Realistic in terms of time and effort.
                         - Tailored to the user's current skills and interests.
                         - Logically ordered to ensure a clear progression toward the goal.
-                       
+                        
                         """,
                 roadmap.getUser().getGoal(), roadmap.getUser().getInterests(), roadmap.getUser().getSkills(),
                 roadmap.getTitle(), roadmap.getDescription()
         );
     }
 
+
+    /**
+     * delete a milestone with the given ID .
+     *
+     * @param milestoneId the ID of the milestone to delete
+     */
     @Override
     public void deleteMilestone(Long milestoneId) {
         if (milestoneRepository.existsById(milestoneId))
@@ -106,6 +130,12 @@ public class MilestoneServiceImpl implements MilestoneService {
             throw new MilestoneNotFoundException();
     }
 
+    /**
+     * Retrieves a milestone by its ID.
+     *
+     * @param milestoneId the ID of the milestone to retrieve
+     * @return the MilestoneDTO object representing the milestone
+     */
     @Override
     public MilestoneDTO getMilestoneById(Long milestoneId) {
         return milestoneRepository.findById(milestoneId)
@@ -113,6 +143,12 @@ public class MilestoneServiceImpl implements MilestoneService {
                 .orElseThrow(MilestoneNotFoundException::new);
     }
 
+    /**
+     * Retrieves a milestone by its title.
+     *
+     * @param title the title of the milestone to retrieve
+     * @return the MilestoneDTO object representing the milestone
+     */
     @Override
     public MilestoneDTO getMilestoneByTitle(String title) {
         return Optional.ofNullable(milestoneRepository.findByTitle(title))
@@ -120,6 +156,12 @@ public class MilestoneServiceImpl implements MilestoneService {
                 .orElseThrow(MilestoneNotFoundException::new);
     }
 
+    /**
+     * Retrieves a list of milestones by the roadmap ID.
+     *
+     * @param roadmapId the ID of the roadmap to retrieve milestones for
+     * @return a list of MilestoneDTO objects representing the milestones
+     */
     @Override
     public List<MilestoneDTO> getMilestoneByRoadmapId(Long roadmapId) {
         return milestoneRepository.findByRoadmapId(roadmapId).stream()
@@ -127,10 +169,23 @@ public class MilestoneServiceImpl implements MilestoneService {
                 .toList();
     }
 
+    /**
+     * Retrieves a milestone by its status.
+     *
+     * @param status the status of the milestone to retrieve
+     * @return the MilestoneDTO object representing the milestone
+     */
     @Override
     public MilestoneDTO getMilestoneByStatus(String status) {
         return getMilestoneByStatus(MilestoneStatus.valueOf(status));
     }
+
+    /**
+     * Retrieves a milestone by its status.
+     *
+     * @param status the status of the milestone to retrieve
+     * @return the MilestoneDTO object representing the milestone
+     */
     @Override
     public MilestoneDTO getMilestoneByStatus(MilestoneStatus status) {
         return Optional.ofNullable(milestoneRepository.findByStatus((status)))
