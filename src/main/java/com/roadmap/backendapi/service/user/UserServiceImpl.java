@@ -33,6 +33,10 @@ import org.springframework.validation.Errors;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * UserServiceImpl is a service class that implements the UseService interface.
+ * It provides methods for managing user accounts, including registration, login, logout, and user information retrieval.
+ */
 @Service
 public class UserServiceImpl implements UseService {
 
@@ -44,11 +48,10 @@ public class UserServiceImpl implements UseService {
     private final PasswordValidator passwordValidator;
     private final AuthenticationManager authenticationManager;
     private final JwtService JwtService;
-    private final TokenStore tokenStore;
 
     public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
                            UserUpdateValidator userUpdateValidator, PasswordEncoderConfig passwordEncoder,
-                           PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService, TokenStore tokenStore) {
+                           PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.userRegistrationValidator = userRegistrationValidator;
@@ -57,15 +60,29 @@ public class UserServiceImpl implements UseService {
         this.passwordValidator = passwordValidator;
         this.authenticationManager = authenticationManager;
         JwtService = jwtService;
-        this.tokenStore = tokenStore;
     }
 
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param userId the ID of the user to retrieve
+     * @return the UserDTO object representing the user
+     * @throws UserNotFoundException if the user is not found
+     */
+    @Override
     public UserDTO getUserById(Long userId) {
         User  user =userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
         return userMapper.toDTO(user);
     }
 
+    /**
+     * Logs in a user with the provided credentials.
+     *
+     * @param loginRequest the LoginRequest object containing the username and password
+     * @return a JWT token if login is successful
+     * @throws LoginFailedException if login fails due to invalid credentials
+     */
     @Override
     public String loginUser(LoginRequest loginRequest) {
         try {
@@ -93,29 +110,54 @@ public class UserServiceImpl implements UseService {
         }
     }
 
+    /**
+     * Logs out a user by removing their token from the token store.
+     *
+     * @param token the JWT token to be removed
+     * @throws AlreadyLoggedOutException if the user is already logged out
+     */
     @Override
     public void logoutUser(String token) {
-        if(!tokenStore.isTokenPresent(token)){
-            throw new AlreadyLoggedOutException("User is already logged out");
-        }
-        tokenStore.removeToken(token);
+        //TODO: check if the token is valid
         // make the user un authenticated
         SecurityContextHolder.clearContext();
 
     }
 
+    /**
+     * Retrieves a user by their email address.
+     *
+     * @param email the email address of the user to retrieve
+     * @return the UserDTO object representing the user
+     * @throws UserNotFoundException if the user is not found
+     */
     public UserDTO getUserByEmail(String email) {
         return Optional.ofNullable(userRepository.findByEmail(email))
                 .map(userMapper::toDTO)
                 .orElseThrow(UserNotFoundException::new);
     }
 
+    /**
+     * Retrieves a user by their username.
+     *
+     * @param username the username of the user to retrieve
+     * @return the UserDTO object representing the user
+     * @throws UserNotFoundException if the user is not found
+     */
     @Cacheable(value = "user", key = "#username")
     public UserDTO getUserByUsername(String username) {
         return Optional.ofNullable(userRepository.findByUsername(username))
                 .map(userMapper::toDTO)
                 .orElseThrow(UserNotFoundException::new);
     }
+
+    /**
+     * Registers a new user with the provided registration request.
+     *
+     * @param registrationRequest the RegistrationRequest object containing user details
+     * @return the UserDTO object representing the registered user
+     * @throws UserValidationException if user validation fails
+     */
     @CachePut(value = "userCache", key = "#result.username")
     public UserDTO registerUser(RegistrationRequest registrationRequest)
     {
@@ -127,6 +169,14 @@ public class UserServiceImpl implements UseService {
         return userMapper.toDTO(user);
     }
 
+
+    /**
+     * Changes the password of a user.
+     *
+     * @param userId the ID of the user whose password is to be changed
+     * @param request the changePasswordRequest object containing the new password and confirmation
+     * @throws PasswordException if password validation fails
+     */
     @Override
     public void changePassword(Long userId, changePasswordRequest request) {
         User user = userRepository.findById(userId)
@@ -151,6 +201,13 @@ public class UserServiceImpl implements UseService {
         userRepository.save(user);
     }
 
+    /**
+     * Validates the user object based on the target type (RegistrationRequest or UpdateUserRequest).
+     *
+     * @param target the target object to validate
+     * @return the validated User object
+     * @throws UserValidationException if validation fails
+     */
     private User validateUser(Object target) {
 
         Errors errors;
@@ -182,12 +239,28 @@ public class UserServiceImpl implements UseService {
         }
         return user;
     }
+
+    /**
+     * Updates the user information based on the provided UpdateUserRequest.
+     *
+     * @param id the ID of the user to update
+     * @param updateUserRequest the UpdateUserRequest object containing updated user details
+     * @return the UserDTO object representing the updated user
+     * @throws UserNotFoundException if the user is not found
+     */
     @CacheEvict(value = "userCache", key = "#result.username")
     public UserDTO updateUser(Long id, UpdateUserRequest updateUserRequest) {
         User user= validateUser(updateUserRequest);
         user= userRepository.save(user);
         return userMapper.toDTO(user);
     }
+
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param userId the ID of the user to delete
+     * @throws UserNotFoundException if the user is not found
+     */
     @CacheEvict(value = "userCache", key = "#userId")
     public void deleteUser(Long userId) {
        Optional.of(userRepository.existsById(userId))

@@ -12,8 +12,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ErrorHandling class provides utility methods for handling errors in the application.
+ * It includes methods to convert error messages into a standard format.
+ */
 public class ErrorHandling {
 
+    /**
+     * Converts a list of error messages into a standard format.
+     *
+     * @param errors The Errors object containing validation errors.
+     * @return A list of ErrorResponse objects representing the error messages.
+     */
     public static List<ErrorResponse> getErrorMessages(Errors errors) {
        List<ErrorResponse> errorResponses =new ArrayList<>();
         if (errors.hasErrors()) {

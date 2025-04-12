@@ -6,6 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.*;
 
+/**
+ * Entity class representing an Address.
+ * This class is used to map the Address table in the database.
+ * It contains fields that represent the properties of an Address.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ */
 @Entity
 @Builder
 @AllArgsConstructor

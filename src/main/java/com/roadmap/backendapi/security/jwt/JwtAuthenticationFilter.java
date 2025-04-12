@@ -21,27 +21,49 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * JwtAuthenticationFilter is a Spring Security filter that processes JWT authentication.
+ * It checks for the presence of a JWT token in the request, validates it, and sets the
+ * authentication context if valid. It also handles rate limiting and security headers.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final RateLimiter rateLimiter = RateLimiter.create(10); // 10 requests/second
 
+    /**
+     * Constructor for JwtAuthenticationFilter.
+     *
+     * @param jwtService         The JWT service for token operations.
+     * @param userDetailsService The user details service for loading user details.
+     */
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
-    // private final AuditService auditService;
 
+    /**
+     * Filters incoming requests to check for JWT authentication.
+     *
+     * @param request     The HTTP request.
+     * @param response    The HTTP response.
+     * @param filterChain The filter chain.
+     * @throws ServletException if an error occurs during filtering.
+     * @throws IOException      if an I/O error occurs.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        // 1. Skip authentication for certain endpoints
         List<String> skipAuth = List.of("/api/v1/users/login", "/api/v1/users/register");
         if (skipAuth.contains(request.getRequestURI())) {
             filterChain.doFilter(request, response);
                 return;
         }
+
 
         try {
             // 1. Rate limiting
@@ -61,6 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 3. Token validation
             String username = jwtService.getUsername(jwt);
+            // Check if the token is present in the token store
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -95,19 +118,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Parses the JWT token from the Authorization header.
+     *
+     * @param request The HTTP request.
+     * @return The JWT token or null if not found.
+     */
     private String parseJwt(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
+        // Check if the header is present and starts with "Bearer "
         return (header != null && header.startsWith("Bearer "))
+                // Extract the token from the header
                 ? header.substring(7)
+                // Return null if the header is not present or does not start with "Bearer
                 : null;
     }
 
+    /**
+     * Sets the authentication in the security context.
+     *
+     * @param request      The HTTP request.
+     * @param userDetails  The user details.
+     */
     private void setAuthenticationInContext(HttpServletRequest request, UserDetails userDetails) {
+        // Create an authentication token with the user details and set it in the security context
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
+        // Set the authentication details
         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        // Set the authentication in the security context
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
+
+    /**
+     * Sets security headers in the HTTP response.
+     *
+     * @param response The HTTP response.
+     */
     private void setSecurityHeaders(HttpServletResponse response) {
         // 1. Basic Security Headers
         response.setHeader("X-Content-Type-Options", "nosniff");

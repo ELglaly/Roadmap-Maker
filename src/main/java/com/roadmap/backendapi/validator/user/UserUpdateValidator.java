@@ -6,6 +6,11 @@ import com.roadmap.backendapi.request.user.UpdateUserRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.*;
 
+import org.springframework.validation.annotation.Validated;
+/**
+ * UserUpdateValidator is a Spring Validator that validates the fields of a User object during update operations.
+ * It checks if the fields are not null or empty and if they match specific formats.
+ */
 @Component
 public class UserUpdateValidator implements Validator {
     private final PhoneNumberValidator phoneNumberValidator;
@@ -25,6 +30,12 @@ public class UserUpdateValidator implements Validator {
         return User.class.equals(clazz);
     }
 
+    /**
+     * Validates the User object.
+     *
+     * @param target the object to validate
+     * @param errors the Errors object to hold validation errors
+     */
     @Override
     public void validate(Object target, Errors errors) {
         User updateUserRequest = (User) target;

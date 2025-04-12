@@ -7,6 +7,14 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
 
+/**
+ * Mapper interface for converting Progress entities to ProgressDTOs.
+ * This interface uses MapStruct to generate the implementation at compile time.
+ * The generated implementation will be a Spring component.
+ *
+ * @see com.roadmap.backendapi.entity.Progress
+ * @see com.roadmap.backendapi.dto.ProgressDTO
+ */
 @Mapper(componentModel = "spring")
 public interface ProgressMapper {
 

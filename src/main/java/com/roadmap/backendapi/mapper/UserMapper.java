@@ -8,6 +8,14 @@ import com.roadmap.backendapi.request.user.UpdateUserRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * Mapper interface for converting User entities to UserDTOs.
+ * This interface uses MapStruct to generate the implementation at compile time.
+ * The generated implementation will be a Spring component.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.dto.UserDTO
+ */
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 

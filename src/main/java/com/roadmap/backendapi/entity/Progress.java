@@ -5,6 +5,14 @@ import lombok.*;
 
 import java.sql.Timestamp;
 
+/**
+ * Entity class representing a Progress.
+ * This class is used to map the Progress table in the database.
+ * It contains fields that represent the properties of a Progress.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.entity.Milestone
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor

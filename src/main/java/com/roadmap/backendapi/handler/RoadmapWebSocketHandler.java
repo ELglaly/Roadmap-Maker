@@ -11,6 +11,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * WebSocket handler for managing connections and sending messages.
+ * This class handles WebSocket connections and allows sending messages to connected clients.
+ * It maintains a map of active WebSocket sessions.
+ */
 @Component
 public class RoadmapWebSocketHandler extends TextWebSocketHandler {
 

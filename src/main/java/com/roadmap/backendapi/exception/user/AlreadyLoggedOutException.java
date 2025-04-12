@@ -4,6 +4,13 @@ import com.roadmap.backendapi.exception.AppException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * Exception thrown when a user is already logged out.
+ * This exception is used to indicate that the user is already logged out
+ * and the request cannot be processed.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ */
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class AlreadyLoggedOutException extends AppException {
     public AlreadyLoggedOutException(String message) {

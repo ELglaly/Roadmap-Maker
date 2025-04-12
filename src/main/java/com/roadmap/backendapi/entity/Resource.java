@@ -3,6 +3,16 @@ package com.roadmap.backendapi.entity;
 import com.roadmap.backendapi.entity.enums.ResourceType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.Hibernate;
+
+
+/**
+ * Entity class representing a Resource.
+ * This class is used to map the Resource table in the database.
+ * It contains fields that represent the properties of a Resource.
+ *
+ * @see com.roadmap.backendapi.entity.Milestone
+ */
 
 @Entity
 @AllArgsConstructor
