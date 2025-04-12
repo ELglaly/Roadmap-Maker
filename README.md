@@ -34,27 +34,31 @@ An intelligent and modular **Roadmap Generator** built with **Spring Boot**, des
 
 ## 🏗️ Project Structure
 
-📂 src
- ├── 📂 main
- │   ├── 📂 java
- │   │   └── 📂 com.example.roadmapgenerator
- │   │       ├── 📂 config          # Application configuration (e.g., beans, security config)
- │   │       ├── 📂 controller      # REST API endpoints
- │   │       ├── 📂 dto             # Data Transfer Objects
- │   │       ├── 📂 entity          # JPA Entities / Models
- │   │       ├── 📂 env             # Environment-specific configuration
- │   │       ├── 📂 exception       # Custom exceptions
- │   │       ├── 📂 handler         # Global exception handling
- │   │       ├── 📂 mapper          # Mappers (e.g., using MapStruct)
- │   │       ├── 📂 repository      # Spring Data JPA repositories
- │   │       ├── 📂 request         # Request payloads
- │   │       ├── 📂 response        # Response payloads
- │   │       ├── 📂 security        # JWT filters, token utils, user auth
- │   │       ├── 📂 service         # Business logic services
- │   │       ├── 📂 utils           # Utility classes and helpers
- │   │       └── 📄 RoadmapGeneratorApplication.java  # Main entry point
- │   ├── 📂 resources
- │   │   ├── 📄 application.properties  
- ├── 📄 .gitignore
- ├── 📄 pom.xml
- └── 📄 README.md
+## 📁 Project Structure
+
+- 📂 `src`
+  - 📂 `main`
+    - 📂 `java`
+      - 📂 `com.example.roadmapgenerator`
+        - 📂 `config`          # Application configuration (e.g., beans, security config)
+        - 📂 `controller`      # REST API endpoints
+        - 📂 `dto`             # Data Transfer Objects
+        - 📂 `entity`          # JPA Entities / Models
+        - 📂 `env`             # Environment-specific configuration
+        - 📂 `exception`       # Custom exceptions
+        - 📂 `handler`         # Global exception handling
+        - 📂 `mapper`          # Mappers (e.g., using MapStruct)
+        - 📂 `repository`      # Spring Data JPA repositories
+        - 📂 `request`         # Request payloads
+        - 📂 `response`        # Response payloads
+        - 📂 `security`        # JWT filters, token utils, user auth
+        - 📂 `service`         # Business logic services
+        - 📂 `utils`           # Utility classes and helpers
+        - 📄 `RoadmapGeneratorApplication.java`  # Main entry point
+    - 📂 `resources`
+      - 📄 `application.properties`
+  
+- 📄 `.gitignore`
+- 📄 `pom.xml`
+- 📄 `README.md`
+
