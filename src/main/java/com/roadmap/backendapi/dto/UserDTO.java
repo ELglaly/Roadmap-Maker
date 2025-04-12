@@ -6,6 +6,14 @@ import lombok.*;
 
 import java.util.List;
 
+/**
+ * Data Transfer Object (DTO) for User.
+ * This class is used to transfer data between the application and the client.
+ * It contains fields that represent the properties of a User.
+ *
+ * @see com.roadmap.backendapi.entity.User
+ */
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
