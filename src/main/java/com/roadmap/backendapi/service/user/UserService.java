@@ -1,6 +1,7 @@
 package com.roadmap.backendapi.service.user;
 
 import com.roadmap.backendapi.Config.PasswordEncoderConfig;
+import com.roadmap.backendapi.Consts;
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.entity.enums.UserRoles;
 import com.roadmap.backendapi.exception.user.*;
@@ -26,6 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
@@ -38,20 +40,20 @@ import java.util.Optional;
  * It provides methods for managing user accounts, including registration, login, logout, and user information retrieval.
  */
 @Service
-public class UserServiceImpl implements UseService {
+public class UserService implements UseService {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final UserRegistrationValidator userRegistrationValidator;
     private final UserUpdateValidator userUpdateValidator;
-    private final PasswordEncoderConfig passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
     private final AuthenticationManager authenticationManager;
     private final JwtService JwtService;
 
-    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
-                           UserUpdateValidator userUpdateValidator, PasswordEncoderConfig passwordEncoder,
-                           PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService) {
+    public UserService(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
+                       UserUpdateValidator userUpdateValidator, PasswordEncoder passwordEncoder,
+                       PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.userRegistrationValidator = userRegistrationValidator;
@@ -163,7 +165,7 @@ public class UserServiceImpl implements UseService {
     {
         User user= validateUser(registrationRequest);
         user.setRole(UserRoles.USER);
-        user.setPassword(passwordEncoder.passwordEncoder().encode(registrationRequest.getPassword()));
+        user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
         user.setEnabled(false);
         user= userRepository.save(user);
         return userMapper.toDTO(user);
@@ -181,23 +183,23 @@ public class UserServiceImpl implements UseService {
     public void changePassword(Long userId, changePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-        Errors errors = new BeanPropertyBindingResult(request.getNewPassword(), "newPassword");
+        Errors errors = new BeanPropertyBindingResult(request, "newPassword");
         if (!Objects.equals(
                 request.getNewPassword().trim(),
                 request.getConfirmPassword().trim()
         )) {
-            errors.rejectValue("confirmPassword", "field.match", "Passwords do not match");
+            errors.rejectValue("confirmPassword", "password.match", Consts.PasswordErrorMessage.PASSWORD_MISMATCH);
             throw new PasswordException(errors);
         }
-        if (!passwordEncoder.passwordEncoder().matches(request.getPassword(), user.getPassword())) {
-            errors.rejectValue("password", "field.invalid", "Incorrect password");
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            errors.rejectValue("password", "password.invalid", Consts.PasswordErrorMessage.PASSWORD_INCORRECT);
             throw new PasswordException(errors);
         }
         passwordValidator.validate(request.getNewPassword(),errors);
         if (errors.hasErrors()) {
             throw new PasswordException(errors);
         }
-        user.setPassword(passwordEncoder.passwordEncoder().encode(request.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
@@ -208,7 +210,7 @@ public class UserServiceImpl implements UseService {
      * @return the validated User object
      * @throws UserValidationException if validation fails
      */
-    private User validateUser(Object target) {
+    public User validateUser(Object target) {
 
         Errors errors;
         if (target == null) {
