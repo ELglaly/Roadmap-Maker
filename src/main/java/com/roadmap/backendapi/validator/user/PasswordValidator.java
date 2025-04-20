@@ -1,5 +1,6 @@
 package com.roadmap.backendapi.validator.user;
 
+import com.roadmap.backendapi.Consts;
 import com.roadmap.backendapi.repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -29,12 +30,12 @@ public class PasswordValidator implements Validator {
     public void validate(Object target, Errors errors) {
         String password = (String) target;
 
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "password", "field.required", "Password is required.");
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "password", "password.required", Consts.PasswordErrorMessage.PASSWORD_REQUIRED);
         if (!password.isEmpty() && password.length() < 8) {
-            errors.rejectValue("password", "field.minlength", "Password must be at least 8 characters long.");
+            errors.rejectValue("password", "password.minlength", Consts.PasswordErrorMessage.PASSWORD_TOO_SHORT);
         }
         else if (!password.isEmpty() && !isValidPassword(password)) {
-            errors.rejectValue("password", "field.constrains", "Password must contain at least one digit, one lowercase letter, one uppercase letter, one special character, and no whitespace");
+            errors.rejectValue("password", "password.constrains", Consts.PasswordErrorMessage.PASSWORD_CONSTRAINS );
         }
     }
 
