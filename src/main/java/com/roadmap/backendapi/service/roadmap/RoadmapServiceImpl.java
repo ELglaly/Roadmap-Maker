@@ -76,15 +76,18 @@ public RoadmapDTO generateRoadmap(Long userId) {
     Roadmap generatedRoadmap = chatClient.prompt(roadmapPrompt).call().entity(Roadmap.class);
 
     // Ensure the generated roadmap is not null
-    assert generatedRoadmap != null;
 
-    for(Milestone milestone: generatedRoadmap.getMilestones()) {
-        milestone.setRoadmap(generatedRoadmap);
-        for(Resource resource : milestone.getResources())
-        {
-            resource.setMilestone(milestone);
-        }
-    };
+    assert generatedRoadmap != null;
+    if(generatedRoadmap.getMilestones()!=null)
+    {
+        for(Milestone milestone: generatedRoadmap.getMilestones()) {
+            milestone.setRoadmap(generatedRoadmap);
+            for(Resource resource : milestone.getResources())
+            {
+                resource.setMilestone(milestone);
+            }
+        };
+    }
     generatedRoadmap.setUser(user);
 
     // Save the generated roadmap with associated milestones
@@ -99,7 +102,7 @@ public RoadmapDTO generateRoadmap(Long userId) {
      * @param user the user for whom to generate the roadmap
      * @return the generated prompt
      */
-    private String getCompleteRoadmapPrompt(User user) {
+    String getCompleteRoadmapPrompt(User user) {
         if (user == null || user.getGoal() == null || user.getInterests() == null || user.getSkills() == null) {
                 throw  new  UserDataRequiredException();
         }
