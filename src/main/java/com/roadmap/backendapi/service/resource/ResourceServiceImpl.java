@@ -1,26 +1,22 @@
 package com.roadmap.backendapi.service.resource;
-
 import com.roadmap.backendapi.dto.ResourceDTO;
+import com.roadmap.backendapi.exception.ConnectionErrorException;
 import com.roadmap.backendapi.exception.milestone.MilestoneUnexpectedException;
 import com.roadmap.backendapi.exception.resource.ResourceNotFoundException;
-import com.roadmap.backendapi.exception.roadmap.RoadmapUnexpectedException;
 import com.roadmap.backendapi.exception.user.UserDataRequiredException;
 import com.roadmap.backendapi.mapper.ResourceMapper;
 import com.roadmap.backendapi.entity.Milestone;
 import com.roadmap.backendapi.entity.Resource;
 import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.ResourceType;
-import com.roadmap.backendapi.repository.MilestoneRepository;
 import com.roadmap.backendapi.repository.ResourceRepository;
 import com.roadmap.backendapi.request.resource.UpdateResourceRequest;
-
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.client.ResourceAccessException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 public class ResourceServiceImpl implements ResourceService {
@@ -28,13 +24,11 @@ public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
     private final ResourceMapper resourceMapper;
     private final ChatClient chatClient;
-    private final MilestoneRepository milestoneRepository;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository, ResourceMapper resourceMapper, ChatClient chatClient, MilestoneRepository milestoneRepository) {
+    public ResourceServiceImpl(ResourceRepository resourceRepository, ResourceMapper resourceMapper, ChatClient chatClient ) {
         this.resourceRepository = resourceRepository;
         this.resourceMapper = resourceMapper;
         this.chatClient = chatClient;
-        this.milestoneRepository = milestoneRepository;
     }
 
 
@@ -46,8 +40,12 @@ public class ResourceServiceImpl implements ResourceService {
         try {
             resource = chatClient.prompt(prompt).call().entity(new ParameterizedTypeReference<List<Resource>>() {
             });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (ResourceAccessException e) {
+            throw new ConnectionErrorException();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e.getMessage());
         }
         milestone.setResources(resource);
     }
@@ -106,7 +104,7 @@ public class ResourceServiceImpl implements ResourceService {
         return str == null || str.isEmpty();
     }
 
-    public void validateRoadmapData(Roadmap roadmap) {
+    private void validateRoadmapData(Roadmap roadmap) {
         if (isNullOrEmpty(roadmap.getUser().getGoal()) ||
                 isNullOrEmpty(roadmap.getUser().getInterests()) ||
                 isNullOrEmpty(roadmap.getUser().getSkills()) ||
@@ -116,7 +114,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
     }
 
-    public void validateMilestoneData(Milestone milestone) {
+    private void validateMilestoneData(Milestone milestone) {
         if ( isNullOrEmpty(milestone.getTitle()) ||
                 isNullOrEmpty(milestone.getDescription()) ||
                 isNullOrEmpty(milestone.getActionableSteps()) ||
