@@ -28,7 +28,7 @@ public class Roadmap {
     private String title;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
-   // @Column(nullable = false,columnDefinition = "Timestamp default current_timestamp")
+    @Column(nullable = false, columnDefinition = "Timestamp default current_timestamp")
     private Date createdDate;
 
     @ManyToOne
@@ -37,5 +37,14 @@ public class Roadmap {
 
     @OneToMany(mappedBy = "roadmap",fetch = FetchType.LAZY,orphanRemoval = true,cascade = CascadeType.ALL)
     private List<Milestone> milestones;
-
+    
+    /**
+     * Initialize createdDate with current date when a new Roadmap is created
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (createdDate == null) {
+            createdDate = new Date();
+        }
+    }
 }
