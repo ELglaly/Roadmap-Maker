@@ -57,7 +57,7 @@ class ResponseCacheInterceptorTest {
         MethodParameter methodParameter = new MethodParameter(method, -1);
 
         // Act
-        boolean result = interceptor.supports(methodParameter, converter.getClass());
+        boolean result = interceptor.supports(methodParameter, (Class<? extends HttpMessageConverter<?>>) converter.getClass());
 
         // Assert
         assertFalse(result);
@@ -70,7 +70,7 @@ class ResponseCacheInterceptorTest {
         MethodParameter methodParameter = new MethodParameter(method, -1);
 
         // Act
-        boolean result = interceptor.supports(methodParameter, converter.getClass());
+        boolean result = interceptor.supports(methodParameter, (Class<? extends HttpMessageConverter<?>>) converter.getClass());
 
         // Assert
         assertTrue(result);
