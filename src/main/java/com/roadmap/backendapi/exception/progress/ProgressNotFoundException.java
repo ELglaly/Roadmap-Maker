@@ -15,6 +15,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class ProgressNotFoundException extends AppException {
     public ProgressNotFoundException() {
 
-      super("PROGRESS_NOT_FOUND",HttpStatus.CONFLICT);
+      super("PROGRESS_NOT_FOUND",HttpStatus.NOT_FOUND);
     }
 }
