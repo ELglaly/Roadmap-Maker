@@ -1,8 +1,6 @@
 package com.roadmap.backendapi.dto;
 import com.roadmap.backendapi.entity.enums.MilestoneStatus;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -20,6 +18,8 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 public class MilestoneDTO {
 
     private Long id;

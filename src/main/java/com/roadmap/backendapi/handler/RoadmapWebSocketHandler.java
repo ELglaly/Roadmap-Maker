@@ -1,6 +1,8 @@
 package com.roadmap.backendapi.handler;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -19,25 +21,33 @@ import java.util.Map;
 @Component
 public class RoadmapWebSocketHandler extends TextWebSocketHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(RoadmapWebSocketHandler.class);
     private final Map<String, WebSocketSession> sessions = new HashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         sessions.put(session.getId(), session);
         session.sendMessage(new TextMessage("Connected to WebSocket."));
+        logger.info("WebSocket connection established for session: {}", session.getId());
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session,CloseStatus status) throws Exception {
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         sessions.remove(session.getId());
+        logger.info("WebSocket connection closed for session: {} with status: {}", session.getId(), status);
     }
 
     public void sendProgressUpdate(String message) {
         sessions.forEach((id, session) -> {
             try {
-                session.sendMessage(new TextMessage(message));
+                if (session.isOpen()) {
+                    session.sendMessage(new TextMessage(message));
+                    logger.debug("Sent WebSocket message to session {}: {}", id, message);
+                } else {
+                    logger.warn("Attempted to send message to closed session: {}", id);
+                }
             } catch (IOException e) {
-                System.err.println("Failed to send WebSocket message: " + e.getMessage());
+                logger.error("Failed to send WebSocket message to session {}: {}", id, e.getMessage(), e);
             }
         });
     }
