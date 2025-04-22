@@ -15,6 +15,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class MilestoneNotFoundException extends AppException {
     public MilestoneNotFoundException() {
 
-      super("MILESTONE_NOT_FOUND",HttpStatus.CONFLICT);
+      super("MILESTONE_NOT_FOUND",HttpStatus.NOT_FOUND);
     }
 }

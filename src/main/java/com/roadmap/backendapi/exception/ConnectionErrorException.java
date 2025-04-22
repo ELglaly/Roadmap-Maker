@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  *
  * @see com.roadmap.backendapi.entity.User
  */
-@ResponseStatus(HttpStatus.BAD_REQUEST)
+@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
 public class    ConnectionErrorException extends AppException {
     public ConnectionErrorException() {
-        super("Your Connection Is Unstable, Try Again Later", HttpStatus.BAD_REQUEST);
+        super("Your Connection Is Unstable, Try Again Later", HttpStatus.SERVICE_UNAVAILABLE);
     }
 }
