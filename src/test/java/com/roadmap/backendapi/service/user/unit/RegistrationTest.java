@@ -2,6 +2,7 @@ package com.roadmap.backendapi.service.user.unit;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.entity.User;
+import com.roadmap.backendapi.entity.enums.UserRoles;
 import com.roadmap.backendapi.exception.user.UserValidationException;
 import com.roadmap.backendapi.mapper.UserMapper;
 import com.roadmap.backendapi.repository.UserRepository;
@@ -86,6 +87,47 @@ public class RegistrationTest {
             verify(userRegistrationValidator).validate(eq(user), any(Errors.class));
             verifyNoMoreInteractions(userRepository, passwordEncoder);
         }
+    /**
+     * Test case for registerUser method when a valid registration request is provided.
+     * This test verifies that the method correctly creates a new user, sets appropriate values,
+     * saves the user to the repository, and returns the mapped UserDTO.
+     */
+    // TODO : check
+    @Test
+    public void test_registerUser_withValidRequest_returnsUserDTO() {
+        // Arrange
+        RegistrationRequest registrationRequest = new RegistrationRequest();
+        registrationRequest.setUsername("testuser");
+        registrationRequest.setPassword("password123");
 
+        User user = new User();
+        user.setUsername("testuser");
+
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername("testuser");
+
+        when(userService.validateUser(registrationRequest)).thenReturn(user);
+        doNothing().when(userRegistrationValidator).validate(eq(registrationRequest), any());
+        when(userMapper.toEntity(registrationRequest)).thenReturn(user);
+        when(userRepository.findByUsername("testuser")).thenReturn(user);
+        when(userRepository.findByEmail(anyString())).thenReturn(user);
+        when(passwordEncoder.encode("password123")).thenReturn("hashedPassword");
+        when(passwordEncoder).thenReturn(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder());
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toDTO(user)).thenReturn(userDTO);
+
+        // Act
+        UserDTO result = userService.registerUser(registrationRequest);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("testuser", result.getUsername());
+        verify(userRepository).save(argThat(savedUser ->
+                savedUser.getRole() == UserRoles.USER &&
+                        !savedUser.isEnabled() &&
+                        savedUser.getPassword() != null && !savedUser.getPassword().equals("password123")
+        ));
+        verify(userMapper).toDTO(user);
+    }
 
 }
