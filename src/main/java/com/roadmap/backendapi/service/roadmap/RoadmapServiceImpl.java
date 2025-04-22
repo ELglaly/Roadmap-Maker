@@ -7,27 +7,19 @@ import com.roadmap.backendapi.exception.ConnectionErrorException;
 import com.roadmap.backendapi.exception.roadmap.*;
 import com.roadmap.backendapi.exception.user.UserDataRequiredException;
 import com.roadmap.backendapi.exception.user.UserNotFoundException;
-import com.roadmap.backendapi.handler.RoadmapWebSocketHandler;
 import com.roadmap.backendapi.mapper.RoadmapMapper;
 import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.User;
-import com.roadmap.backendapi.repository.MilestoneRepository;
-import com.roadmap.backendapi.repository.ResourceRepository;
 import com.roadmap.backendapi.repository.RoadmapRepository;
 import com.roadmap.backendapi.repository.UserRepository;
 import com.roadmap.backendapi.request.roadmap.UpdateRoadmapRequest;
-import com.roadmap.backendapi.service.milestone.MilestoneService;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.context.request.WebRequest;
 
-import java.net.SocketException;
-import java.net.http.WebSocket;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * RoadmapServiceImpl is a service class that implements the RoadmapService interface.
@@ -40,21 +32,13 @@ public class RoadmapServiceImpl implements RoadmapService {
     private final RoadmapMapper roadMapMapper;
     private final UserRepository userRepository;
     private final ChatClient chatClient;
-    private final MilestoneService milestoneService;
-    private final RoadmapWebSocketHandler roadmapWebSocketHandler;
-    private final MilestoneRepository milestoneRepository;
-    private final ResourceRepository resourceRepository;
 
 
-    public RoadmapServiceImpl(RoadmapRepository roadmapRepository, RoadmapMapper roadMapMapper, UserRepository userRepository, ChatClient chatClient, MilestoneService milestoneService, RoadmapWebSocketHandler roadmapWebSocketHandler, MilestoneRepository milestoneRepository, ResourceRepository resourceRepository) {
+    public RoadmapServiceImpl(RoadmapRepository roadmapRepository, RoadmapMapper roadMapMapper, UserRepository userRepository, ChatClient chatClient) {
         this.roadmapRepository = roadmapRepository;
         this.roadMapMapper = roadMapMapper;
         this.userRepository = userRepository;
         this.chatClient = chatClient;
-        this.milestoneService = milestoneService;
-        this.roadmapWebSocketHandler = roadmapWebSocketHandler;
-        this.milestoneRepository = milestoneRepository;
-        this.resourceRepository = resourceRepository;
     }
 
     /**
@@ -63,48 +47,60 @@ public class RoadmapServiceImpl implements RoadmapService {
      *
      * @param userId the ID of the user for whom to generate the roadmap
      * @return the generated roadmap as a RoadmapDTO
+     * @throws UserNotFoundException if the user with the given ID is not found
+     * @throws UserDataRequiredException if the user's profile is incomplete
+     * @throws ConnectionErrorException if there's an error connecting to the AI service
+     * @throws RoadmapNullException if the generated roadmap is null
      */
-public RoadmapDTO generateRoadmap(Long userId) {
-    // Step 1: Fetch the user
-    User user = userRepository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
+    public RoadmapDTO generateRoadmap(Long userId) {
+        // Step 1: Fetch the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    // Step 2: Generate the roadmap prompt
-    String roadmapPrompt = getCompleteRoadmapPrompt(user);
+        // Step 2: Generate the roadmap prompt
+        String roadmapPrompt = getCompleteRoadmapPrompt(user);
 
-    // Generate the roadmap using the chat client
-    Roadmap generatedRoadmap = chatClient.prompt(roadmapPrompt).call().entity(Roadmap.class);
+        // Generate the roadmap using the chat client
+        Roadmap generatedRoadmap = null;
+        try {
+            generatedRoadmap = chatClient.prompt(roadmapPrompt).call().entity(Roadmap.class);
+        } catch (ResourceAccessException e) {
+            throw new ConnectionErrorException();
+        }
 
-    // Ensure the generated roadmap is not null
-
-    assert generatedRoadmap != null;
-    if(generatedRoadmap.getMilestones()!=null)
-    {
-        for(Milestone milestone: generatedRoadmap.getMilestones()) {
-            milestone.setRoadmap(generatedRoadmap);
-            for(Resource resource : milestone.getResources())
-            {
-                resource.setMilestone(milestone);
+        // Ensure the generated roadmap is not null
+        if (generatedRoadmap == null) {
+            throw new RoadmapNullException();
+        }
+        
+        if (generatedRoadmap.getMilestones() != null) {
+            for (Milestone milestone : generatedRoadmap.getMilestones()) {
+                milestone.setRoadmap(generatedRoadmap);
+                if (milestone.getResources() != null) {
+                    for (Resource resource : milestone.getResources()) {
+                        resource.setMilestone(milestone);
+                    }
+                }
             }
-        };
+        }
+        generatedRoadmap.setUser(user);
+
+        // Save the generated roadmap with associated milestones
+        generatedRoadmap = roadmapRepository.save(generatedRoadmap);
+
+        return roadMapMapper.toDTO(generatedRoadmap);
     }
-    generatedRoadmap.setUser(user);
-
-    // Save the generated roadmap with associated milestones
-    generatedRoadmap = roadmapRepository.save(generatedRoadmap);
-
-    return roadMapMapper.toDTO(generatedRoadmap);
-}
 
     /**
      * Generates a prompt for the ChatClient to create a detailed roadmap based on the user's profile.
      *
      * @param user the user for whom to generate the roadmap
      * @return the generated prompt
+     * @throws UserDataRequiredException if the user's profile is incomplete
      */
     String getCompleteRoadmapPrompt(User user) {
         if (user == null || user.getGoal() == null || user.getInterests() == null || user.getSkills() == null) {
-                throw  new  UserDataRequiredException();
+                throw new UserDataRequiredException();
         }
         return String.format(
                 """
@@ -145,7 +141,7 @@ public RoadmapDTO generateRoadmap(Long userId) {
                 ## **Step 3: Generate Maximum Number of Recommended Resources**
                 For each milestone, generate **as many relevant and high-quality resources as possible** to **support learning and skill development**. The resources must be:
     
-                - **Directly relevant** to the milestone’s goal and tasks.
+                - **Directly relevant** to the milestone's goal and tasks.
                 - **From reputable sources** to ensure high quality.
                 - **A mix of different types** to cater to different learning styles.
     
@@ -173,10 +169,34 @@ public RoadmapDTO generateRoadmap(Long userId) {
      * Updates a roadmap for a user.
      * @param request the request containing the updated roadmap details
      * @return the updated roadmap as a RoadmapDTO
+     * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
     public RoadmapDTO updateRoadmap(UpdateRoadmapRequest request) {
-        return null;
+        // First check if the roadmap exists
+        Long roadmapId = request.getRoadmapId();
+        if (roadmapId == null) {
+            // If no roadmap ID is provided, generate a new roadmap
+            return generateRoadmap(request.getUserId());
+        }
+        
+        // Find the existing roadmap
+        Roadmap existingRoadmap = roadmapRepository.findById(roadmapId)
+                .orElseThrow(RoadMapNotFoundException::new);
+        
+        // Update the roadmap fields if provided in the request
+        if (request.getTitle() != null) {
+            existingRoadmap.setTitle(request.getTitle());
+        }
+        
+        if (request.getDescription() != null) {
+            existingRoadmap.setDescription(request.getDescription());
+        }
+        
+        // Save the updated roadmap
+        existingRoadmap = roadmapRepository.save(existingRoadmap);
+        
+        return roadMapMapper.toDTO(existingRoadmap);
     }
 
 
@@ -184,6 +204,7 @@ public RoadmapDTO generateRoadmap(Long userId) {
      * Deletes a roadmap with the given ID.
      *
      * @param roadmapId the ID of the roadmap to delete
+     * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
     public void deleteRoadmap(Long roadmapId) {
@@ -198,6 +219,7 @@ public RoadmapDTO generateRoadmap(Long userId) {
      *
      * @param roadmapId the ID of the roadmap to retrieve
      * @return the retrieved roadmap as a RoadmapDTO
+     * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
     public RoadmapDTO getRoadmapById(Long roadmapId) {
