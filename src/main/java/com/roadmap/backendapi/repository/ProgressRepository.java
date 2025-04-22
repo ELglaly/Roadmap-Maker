@@ -16,4 +16,6 @@ public interface ProgressRepository extends JpaRepository<Progress, Long> {
     Boolean existsByUserId(Long userId);
 
     Progress findByMilestoneId(Long milestoneId);
+
+    Boolean existsByUserIdAndMilestoneId(Long userId, Long milestoneId);
 }
