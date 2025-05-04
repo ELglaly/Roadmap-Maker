@@ -1,27 +1,28 @@
 package com.roadmap.backendapi.security.jwt;
 
-import com.roadmap.backendapi.entity.User;
-import com.roadmap.backendapi.exception.user.AlreadyLoggedInException;
 import com.roadmap.backendapi.exception.user.InvalidTokenException;
 import com.roadmap.backendapi.exception.user.TokenGenerationException;
-import com.roadmap.backendapi.security.jwt.tokenstore.TokenStore;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.InvalidKeyException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 
 /** * JwtService is a service class that handles JWT token generation, validation,
@@ -29,23 +30,32 @@ import java.util.Map;
  * and check token validity.
  *
  * @see com.roadmap.backendapi.security.jwt.JwtAuthenticationFilter
- * @see com.roadmap.backendapi.security.jwt.tokenstore.TokenStore
+ * @see com.roadmap.backendapi.security.jwt.JwtService
  */
 @Service
 public class JwtService {
+    // If using Redis or another distributed cache:
+    private final RedisTemplate<String, Date> redisTemplate;
 
-    private static String secretKey = "";
-    private static final long validityInMilliseconds = 60 * 60 * 1000; // 1h
-    private static final long logoutTimeInMilliseconds = 60 * 60 * 1000; // 1m
 
-    public JwtService() {
+    private final String secretKey;
+
+    @Value("${jwt.expiration.ms}")
+    private long expirationMs;
+
+    @Value("${jwt.logout-time.ms}")
+    private long logoutTimeMs;
+
+
+    public JwtService(RedisTemplate<String, Date> redisTemplate) {
+        this.redisTemplate = redisTemplate;
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
             SecretKey sk = keyGenerator.generateKey();
             secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
 
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new TokenGenerationException("Failed to generate secret key" +e.getMessage());
         }
     }
 
@@ -62,26 +72,18 @@ public class JwtService {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or blank");
         }
-        if (validityInMilliseconds <= 0) {
-            throw new IllegalArgumentException("Token validity must be positive");
-        }
-
-        // 2. Prepare claims
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("username", username);
 
         try {
             // 3. Build token
             Instant now = Instant.now();
             return Jwts.builder()
-                    .claims(claims)
                     .subject(username)
                     .issuedAt(Date.from(now))
-                    .expiration(Date.from(now.plusMillis(validityInMilliseconds)))
+                    .expiration(Date.from(now.plusMillis(expirationMs)))
                     .signWith(getKey())
                     .compact();
 
-        } catch (JwtException e) {
+        } catch (JwtException ex) {
             throw new TokenGenerationException("Failed to generate token");
         }
     }
@@ -91,7 +93,7 @@ public class JwtService {
      * It uses the HmacSHA256 algorithm to generate a key from the secretKey string.
      * @return The SecretKey object used for signing the JWT.
      */
-    private  SecretKey getKey() {
+    private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
@@ -104,13 +106,7 @@ public class JwtService {
      */
     public String getUsername(String token) throws InvalidTokenException {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(getKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
-            String username = claims.get("username", String.class);
+            String username = parseClaims(token).getSubject();
             if (username == null) {
                 throw new InvalidTokenException("Missing username claim");
             }
@@ -129,7 +125,10 @@ public class JwtService {
      * @return true if the token is valid, false otherwise.
      */
     public boolean validateToken(String token, UserDetails userDetails) {
-        return userDetails.getUsername().equals(getUsername(token));
+        return userDetails.getUsername().equals(getUsername(token))
+                && !isTokenExpired(token)
+                && !isTokenBlacklisted(token)
+                ;
     }
 
 
@@ -141,11 +140,7 @@ public class JwtService {
      */
     public boolean isTokenExpired(String token) {
         try {
-            return Jwts.parser()
-                    .verifyWith(getKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
+            return parseClaims(token)
                     .getExpiration()
                     .before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
@@ -153,63 +148,38 @@ public class JwtService {
         }
     }
 
-    /**
-     * This method checks if the token is within the logout time.
-     * It compares the current time with the expiration time of the token.
-     * @param token The JWT token to be checked.
-     * @return true if the token is within the logout time, false otherwise.
-     */
-    public boolean isWithinLogoutTime(String token) {
-        try {
-            Date expiration = Jwts.parser()
-                    .verifyWith(getKey())
-                    .build().parseSignedClaims(token)
-                    .getPayload()
-                    .getExpiration();
-            return new Date().before(new Date(expiration.getTime() + logoutTimeInMilliseconds));
-        } catch (JwtException | IllegalArgumentException e) {
+
+    public boolean isTokenBlacklisted(String token) {
+        if (token == null || token.trim().isEmpty()) {
             return false;
         }
+        long expirationTime = Objects.requireNonNull(redisTemplate.opsForValue().get(token)).getTime();
+        return expirationTime > System.currentTimeMillis();
     }
 
-    /**
-     * This method is used to handle the token refresh process.
-     * It checks if the token is expired and generates a new token if necessary.
-     * @param response The HTTP response object.
-     * @param jwt The JWT token to be refreshed.
-     */
-    public void handleTokenRefresh(HttpServletResponse response, String jwt) {
-        // implement the method here
-        response.setHeader("Authorization", "Bearer " + refreshToken(jwt));
-    }
-
-
-    /**
-     * This method is used to refresh the token if it is expired.
-     * It generates a new token with the same claims and a new expiration time.
-     * @param token The expired token to be refreshed.
-     * @return The new token if the old one is expired, otherwise an empty string.
-     */
-    private String refreshToken(String token) {
-        // implement the method here
-        if (isTokenExpired(token)) {
-            try {
-                return Jwts.builder()
-                        .claims(Jwts.parser()
-                                .verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
-                                .build()
-                                .parseSignedClaims(token)
-                                .getPayload())
-                        .issuedAt(new Date(System.currentTimeMillis()))
-                        .expiration(new Date(System.currentTimeMillis() + validityInMilliseconds))
-                        .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
-                        .compact();
-            } catch (JwtException | IllegalArgumentException e) {
-                return "";
-            }
+    public void blacklistToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new SecurityException("Token cannot be null or empty");
         }
-        return "";
+        else if (isTokenBlacklisted(token)) {
+            throw new SecurityException("Token is already blacklisted");
+        }
+
+        Date expirationDate = new Date(System.currentTimeMillis() + logoutTimeMs);
+        redisTemplate.opsForValue().set(
+                token,
+                expirationDate,
+                logoutTimeMs,
+                TimeUnit.MILLISECONDS
+        );
     }
 
+    private Claims parseClaims(String token) {
+        return  Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
 
 }
