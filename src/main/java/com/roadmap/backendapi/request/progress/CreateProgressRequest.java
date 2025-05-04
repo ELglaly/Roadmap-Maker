@@ -8,5 +8,4 @@ import lombok.Setter;
 public class CreateProgressRequest {
     private Long userId;
     private Long milestoneId;
-    private String completed_at;
 }
