@@ -41,28 +41,17 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     public ProgressDTO createProgress(CreateProgressRequest request) {
-        if (progressRepository.existsByUserIdAndMilestoneId(request.getUserId(), request.getMilestoneId()))
+        if (progressRepository.existsByUserIdAndMilestoneId(request.getUserId(), request.getMilestoneId())) {
             throw new ProgressAlreadyExistsException();
-        else {
+        }
             // Create a new Progress entity without fetching the User from the database
             Progress progress = Progress.builder()
-                .user(User.builder().id(request.getUserId()).build()) // Create a User reference with just the ID
-                .milestone(Milestone.builder().id(request.getMilestoneId()).build()) // Create a Milestone reference with just the ID
+                .user(User.builder().id(request.getUserId()).build())
+                .milestone(Milestone.builder().id(request.getMilestoneId()).build())
                 .build();
-            
-            // Set completed_at if provided, otherwise it will use the default CURRENT_TIMESTAMP
-            if (request.getCompleted_at() != null) {
-                try {
-                    progress.setCompleted_at(Timestamp.valueOf(request.getCompleted_at()));
-                } catch (IllegalArgumentException e) {
-                    // If the timestamp format is invalid, use current timestamp
-                    progress.setCompleted_at(new Timestamp(System.currentTimeMillis()));
-                }
-            }
-            
+
             // Save the progress and return the DTO
             return progressMapper.toDTO(progressRepository.save(progress));
-        }
     }
 
     @Override
