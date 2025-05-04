@@ -47,7 +47,6 @@ class ProgressControllerTest {
         createRequest = new CreateProgressRequest();
         createRequest.setUserId(1L);
         createRequest.setMilestoneId(2L);
-        createRequest.setCompleted_at("2023-10-15 14:30:00");
 
         updateRequest = new UpdateProgressRequest();
         updateRequest.setProgressId(1L);
