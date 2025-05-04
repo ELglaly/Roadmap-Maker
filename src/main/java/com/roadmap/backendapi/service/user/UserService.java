@@ -12,6 +12,7 @@ import com.roadmap.backendapi.request.user.LoginRequest;
 import com.roadmap.backendapi.request.user.RegistrationRequest;
 import com.roadmap.backendapi.request.user.UpdateUserRequest;
 import com.roadmap.backendapi.request.user.changePasswordRequest;
+import com.roadmap.backendapi.security.UserDetails;
 import com.roadmap.backendapi.security.jwt.JwtService;
 import com.roadmap.backendapi.security.jwt.tokenstore.TokenStore;
 import com.roadmap.backendapi.validator.user.PasswordValidator;
@@ -120,8 +121,9 @@ public class UserService implements UseService {
      */
     @Override
     public void logoutUser(String token) {
-        //TODO: check if the token is valid
-        // make the user un authenticated
+
+        JwtService.blacklistToken(token);
+        // . Clear authentication context
         SecurityContextHolder.clearContext();
 
     }
