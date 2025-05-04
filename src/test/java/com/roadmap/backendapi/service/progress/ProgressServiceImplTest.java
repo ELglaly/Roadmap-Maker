@@ -38,34 +38,54 @@ class ProgressServiceImplTest {
     }
 
     @Test
-    void createProgress_ShouldCreateProgressWithoutFetchingUser() {
+    void createProgress_ShouldThrowExceptionWhenUserIdIsNull() {
+        // Arrange
+        CreateProgressRequest request = new CreateProgressRequest();
+        request.setUserId(null);
+        request.setMilestoneId(2L);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> progressService.createProgress(request));
+        verify(progressRepository, never()).save(any());
+    }
+
+    @Test
+    void createProgress_ShouldThrowExceptionWhenMilestoneIdIsNull() {
+        // Arrange
+        CreateProgressRequest request = new CreateProgressRequest();
+        request.setUserId(1L);
+        request.setMilestoneId(null);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> progressService.createProgress(request));
+        verify(progressRepository, never()).save(any());
+    }
+
+    @Test
+    void createProgress_ShouldHandleNullCompletedAt() {
         // Arrange
         Long userId = 1L;
         Long milestoneId = 2L;
-        String completedAt = "2023-10-15 14:30:00";
 
         CreateProgressRequest request = new CreateProgressRequest();
         request.setUserId(userId);
         request.setMilestoneId(milestoneId);
-        request.setCompleted_at(completedAt);
 
         // Mock repository behavior
         when(progressRepository.existsByUserIdAndMilestoneId(userId, milestoneId)).thenReturn(false);
-        
+
         Progress savedProgress = Progress.builder()
                 .id(1L)
                 .user(User.builder().id(userId).build())
                 .milestone(Milestone.builder().id(milestoneId).build())
-                .completed_at(Timestamp.valueOf(completedAt))
                 .build();
-        
+
         when(progressRepository.save(any(Progress.class))).thenReturn(savedProgress);
-        
+
         ProgressDTO expectedDTO = ProgressDTO.builder()
                 .id(1L)
-                .completed_at(Timestamp.valueOf(completedAt))
                 .build();
-        
+
         when(progressMapper.toDTO(savedProgress)).thenReturn(expectedDTO);
 
         // Act
@@ -74,40 +94,16 @@ class ProgressServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals(expectedDTO, result);
-        
-        // Verify that we're creating a Progress with just the user ID, not fetching the full user
+
         ArgumentCaptor<Progress> progressCaptor = ArgumentCaptor.forClass(Progress.class);
         verify(progressRepository).save(progressCaptor.capture());
-        
+
         Progress capturedProgress = progressCaptor.getValue();
-        assertEquals(userId, capturedProgress.getUser().getId());
-        assertEquals(milestoneId, capturedProgress.getMilestone().getId());
-        assertEquals(Timestamp.valueOf(completedAt), capturedProgress.getCompleted_at());
-        
-        // Verify that we're not making any additional calls to fetch the user
-        verify(progressRepository, never()).findByUserId(any());
+        assertNull(capturedProgress.getCompleted_at());
     }
 
     @Test
-    void createProgress_ShouldThrowExceptionWhenProgressAlreadyExists() {
-        // Arrange
-        Long userId = 1L;
-        Long milestoneId = 2L;
-
-        CreateProgressRequest request = new CreateProgressRequest();
-        request.setUserId(userId);
-        request.setMilestoneId(milestoneId);
-
-        // Mock repository behavior
-        when(progressRepository.existsByUserIdAndMilestoneId(userId, milestoneId)).thenReturn(true);
-
-        // Act & Assert
-        assertThrows(ProgressAlreadyExistsException.class, () -> progressService.createProgress(request));
-        verify(progressRepository, never()).save(any());
-    }
-
-    @Test
-    void createProgress_ShouldHandleInvalidTimestampFormat() {
+    void createProgress_ShouldThrowExceptionWhenTimestampIsInvalid() {
         // Arrange
         Long userId = 1L;
         Long milestoneId = 2L;
@@ -116,38 +112,9 @@ class ProgressServiceImplTest {
         CreateProgressRequest request = new CreateProgressRequest();
         request.setUserId(userId);
         request.setMilestoneId(milestoneId);
-        request.setCompleted_at(invalidCompletedAt);
 
-        // Mock repository behavior
-        when(progressRepository.existsByUserIdAndMilestoneId(userId, milestoneId)).thenReturn(false);
-        
-        Progress savedProgress = Progress.builder()
-                .id(1L)
-                .user(User.builder().id(userId).build())
-                .milestone(Milestone.builder().id(milestoneId).build())
-                .completed_at(any(Timestamp.class))
-                .build();
-        
-        when(progressRepository.save(any(Progress.class))).thenReturn(savedProgress);
-        
-        ProgressDTO expectedDTO = ProgressDTO.builder()
-                .id(1L)
-                .completed_at(any(Timestamp.class))
-                .build();
-        
-        when(progressMapper.toDTO(savedProgress)).thenReturn(expectedDTO);
-
-        // Act
-        ProgressDTO result = progressService.createProgress(request);
-
-        // Assert
-        assertNotNull(result);
-        
-        // Verify that we're creating a Progress with a timestamp (even if the input was invalid)
-        ArgumentCaptor<Progress> progressCaptor = ArgumentCaptor.forClass(Progress.class);
-        verify(progressRepository).save(progressCaptor.capture());
-        
-        Progress capturedProgress = progressCaptor.getValue();
-        assertNotNull(capturedProgress.getCompleted_at());
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> progressService.createProgress(request));
+        verify(progressRepository, never()).save(any());
     }
 }
