@@ -67,7 +67,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 sendError(response, HttpStatus.UNAUTHORIZED, "Invalid token");
                 return;
             }
-
+            if (jwtService.isTokenBlacklisted(jwt)) {
+                sendError(response, HttpStatus.UNAUTHORIZED, "Token is blacklisted");
+                return;
+            }
+            // refresh token and set it in the response header
+            String newToken = jwtService.generateToken(username);
+            response.setHeader("Authorization", "Bearer " + newToken);
+            // Set authentication in the security context
             setAuthenticationInContext(request, userDetails);
             filterChain.doFilter(request, response);
 

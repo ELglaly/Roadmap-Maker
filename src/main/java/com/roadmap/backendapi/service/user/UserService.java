@@ -14,7 +14,6 @@ import com.roadmap.backendapi.request.user.UpdateUserRequest;
 import com.roadmap.backendapi.request.user.changePasswordRequest;
 import com.roadmap.backendapi.security.UserDetails;
 import com.roadmap.backendapi.security.jwt.JwtService;
-import com.roadmap.backendapi.security.jwt.tokenstore.TokenStore;
 import com.roadmap.backendapi.validator.user.PasswordValidator;
 import com.roadmap.backendapi.validator.user.UserRegistrationValidator;
 import com.roadmap.backendapi.validator.user.UserUpdateValidator;
