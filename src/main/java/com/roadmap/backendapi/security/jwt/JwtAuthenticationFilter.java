@@ -13,11 +13,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -80,20 +82,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (AuthenticationException | UsernameNotFoundException e) {
             sendError(response, HttpStatus.UNAUTHORIZED, e.getMessage());
-        } catch (Exception e) {
-            sendError(response, HttpStatus.INTERNAL_SERVER_ERROR, "Authentication error");
+        } catch (JwtException e) {
+            sendError(response, HttpStatus.UNAUTHORIZED, "JWT token error: " + e.getMessage());
+        } catch (RuntimeException e) {
+            sendError(response, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+            // Log the exception for debugging purposes
+            logger.error("Unexpected error during authentication", e);
         }
     }
 
+    // Import java.util.Optional for safer handling of potentially null values
     private String parseJwt(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null) {
-            header = header.trim();
-            if (header.startsWith("Bearer ") || header.startsWith("bearer ")) {
-                return header.substring(7);
-            }
-        }
-        return null;
+        return Optional.ofNullable(request.getHeader("Authorization"))
+            .map(String::trim)
+            .filter(header -> header.toLowerCase().startsWith("bearer "))
+            .map(header -> header.substring(7))
+            .orElse(null);
     }
 
     private void setAuthenticationInContext(HttpServletRequest request, UserDetails userDetails) {
