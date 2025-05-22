@@ -5,8 +5,11 @@ import com.roadmap.backendapi.request.progress.CreateProgressRequest;
 import com.roadmap.backendapi.request.progress.UpdateProgressRequest;
 import com.roadmap.backendapi.response.APIResponse;
 import com.roadmap.backendapi.service.progress.ProgressService;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/progress")
+@Validated
 public class ProgressController {
 
     private final ProgressService progressService;
@@ -32,7 +36,7 @@ public class ProgressController {
      * @return ResponseEntity containing the created progress DTO
      */
     @PostMapping
-    public ResponseEntity<APIResponse> createProgress(@RequestBody CreateProgressRequest request) {
+    public ResponseEntity<APIResponse> createProgress(@RequestBody @Validated CreateProgressRequest request) {
         ProgressDTO progressDTO = progressService.createProgress(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new APIResponse( "Progress created successfully",progressDTO));
@@ -45,7 +49,7 @@ public class ProgressController {
      * @return ResponseEntity containing the updated progress DTO
      */
     @PutMapping
-    public ResponseEntity<APIResponse> updateProgress(@RequestBody UpdateProgressRequest request) {
+    public ResponseEntity<APIResponse> updateProgress(@RequestBody @Validated UpdateProgressRequest request) {
         ProgressDTO progressDTO = progressService.updateProgress(request);
         return ResponseEntity.ok(new APIResponse( "Progress updated successfully",progressDTO));
     }
@@ -56,11 +60,11 @@ public class ProgressController {
      * @param progressId The ID of the progress to delete
      * @return ResponseEntity with a success message
      */
-    @DeleteMapping("/{progressId}")
-    public ResponseEntity<APIResponse> deleteProgress(@PathVariable Long progressId) {
-        progressService.deleteProgress(progressId);
-        return ResponseEntity.ok(new APIResponse(null, "Progress deleted successfully"));
-    }
+@DeleteMapping("/{progressId}")
+public ResponseEntity<APIResponse> deleteProgress(@PathVariable Long progressId) {
+    progressService.deleteProgress(progressId);
+    return ResponseEntity.ok(new APIResponse(null, "Progress deleted successfully"));
+}
 
     /**
      * GET endpoint to retrieve a progress by ID.
@@ -92,9 +96,10 @@ public class ProgressController {
      * @param milestoneId The ID of the milestone whose progress to retrieve
      * @return ResponseEntity containing the progress DTO
      */
-    @GetMapping("/milestone/{milestoneId}")
-    public ResponseEntity<APIResponse> getProgressByMilestoneId(@PathVariable Long milestoneId) {
-        ProgressDTO progressDTO = progressService.getProgressByMilestoneId(milestoneId);
-        return ResponseEntity.ok(new APIResponse( "Progress retrieved successfully",progressDTO));
-    }
+@GetMapping("/milestone/{milestoneId}")
+@PreAuthorize("hasRole('USER')")
+public ResponseEntity<APIResponse> getProgressByMilestoneId(@PathVariable @Validated @Positive Long milestoneId) {
+    ProgressDTO progressDTO = progressService.getProgressByMilestoneId(milestoneId);
+    return ResponseEntity.ok(new APIResponse("Progress retrieved successfully", progressDTO));
+}
 }
