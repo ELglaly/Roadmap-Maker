@@ -10,6 +10,7 @@ import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * EmailValidator is a Spring Validator that validates email addresses.
@@ -56,9 +57,10 @@ public class EmailValidator implements Validator {
          * @param email the email address to check
          * @return true if the email address is valid, false otherwise
          */
-        private boolean isValidEmail (String email){
-            // Basic email validation regex (you can use a more robust one)
-            String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-            return email.matches(emailRegex);
-        }
+// Import java.util.regex.Pattern for email validation
+private boolean isValidEmail(String email) {
+    // Use a more robust email regex pattern
+    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    return Pattern.compile(emailRegex).matcher(email).matches();
+}
     }

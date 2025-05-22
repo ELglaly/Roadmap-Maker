@@ -30,16 +30,16 @@ public class AddressValidator implements Validator {
         Address address = (Address) target;
 
         // Add more specific validation for address fields as needed
-        if (valueNullOrEmpty(address.getZip()) && !address.getZip().matches("\\d{5}(-\\d{4})?")) {
+        if (!valueNullOrEmpty(address.getZip()) && !address.getZip().matches("\\d{5}(-\\d{4})?")) {
             errors.rejectValue("zipCode", "field.invalid", "Invalid zip code format.");
         }
-        if (valueNullOrEmpty(address.getCity()) && notString(address.getCity())) {
+        if (!valueNullOrEmpty(address.getCity()) && notString(address.getCity())) {
             errors.rejectValue("city", "field.invalid", "Invalid city name format.");
         }
-        if (valueNullOrEmpty(address.getStreet()) && notString(address.getStreet())) {
+        if (!valueNullOrEmpty(address.getStreet()) && notString(address.getStreet())) {
             errors.rejectValue("state", "field.invalid", "Invalid state name format.");
         }
-        if (valueNullOrEmpty(address.getCountry()) && notString(address.getCountry())) {
+        if (!valueNullOrEmpty(address.getCountry()) && notString(address.getCountry())) {
             errors.rejectValue("country", "field.invalid", "Invalid country name format.");
         }
     }
