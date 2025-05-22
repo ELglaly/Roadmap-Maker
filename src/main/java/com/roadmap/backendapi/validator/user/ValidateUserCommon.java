@@ -36,40 +36,54 @@ public class ValidateUserCommon implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         User user = (User) target;
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "firstName", "field.required", "First name is required.");
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "lastName", "field.required", "Last name is required.");
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "username", "field.required", "Username is required.");
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "goal", "field.required", "Goal is required.");
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "interests", "field.required", "Interests are required.");
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "skills", "field.required", "Skills are required.");
+        validateRequiredFields(user, errors);
+        validateEmail(user, errors);
+        validateNameFields(user, errors);
+        validateUsername(user, errors);
+        validateTextFields(user, errors);
+    }
 
-        if (user.getEmail() == null) {
+    private void validateRequiredFields(User user, Errors errors) {
+        String[] fields = {"firstName", "lastName", "username", "goal", "interests", "skills"};
+        for (String field : fields) {
+            ValidationUtils.rejectIfEmptyOrWhitespace(errors, field, "field.required", field + " is required.");
+        }
+    }
+
+    private void validateEmail(User user, Errors errors) {
+        if (valueNullOrEmpty(user.getEmail())) {
             errors.rejectValue("email", "field.required", "Email is required.");
         } else {
             ValidationUtils.invokeValidator(emailValidator, user.getEmail(), errors);
         }
+    }
 
-        if ( valueNullOrEmpty(user.getFirstName()) && (user.getFirstName().length() < 2 || user.getFirstName().length() > 50)) {
-            errors.rejectValue("firstName", "field.size", "First name must be between 2 and 50 characters.");
-        }
-        if (valueNullOrEmpty(user.getFirstName()) && (user.getLastName().length() < 2 || user.getLastName().length() > 50)) {
-            errors.rejectValue("lastName", "field.size", "Last name must be between 2 and 50 characters.");
-        }
-        if (user.getUsername() != null && (user.getUsername().length() < 5 || user.getUsername().length() > 20)) {
-            errors.rejectValue("username", "field.size", "Username must be between 5 and 20 characters.");
-        } else if (userRepository.existsByUsername(user.getUsername())) {
-            errors.rejectValue("username", "field.duplicate", "Username already exists.");
-        }
-        if (valueNullOrEmpty(user.getFirstName()) && user.getGoal().length() > 500) {
-            errors.rejectValue("goal", "field.maxlength", "Goal cannot exceed 500 characters.");
-        }
-        if (valueNullOrEmpty(user.getFirstName()) && user.getInterests().length() > 500) {
-            errors.rejectValue("interests", "field.maxlength", "Interests cannot exceed 500 characters.");
-        }
-        if (valueNullOrEmpty(user.getFirstName()) && user.getSkills().length() > 500) {
-            errors.rejectValue("skills", "field.maxlength", "Skills cannot exceed 500 characters.");
+    private void validateNameFields(User user, Errors errors) {
+        validateFieldLength(user.getFirstName(), "firstName", 2, 50, errors);
+        validateFieldLength(user.getLastName(), "lastName", 2, 50, errors);
+    }
+
+    private void validateUsername(User user, Errors errors) {
+        if (valueNullOrEmpty(user.getUsername())) {
+            validateFieldLength(user.getUsername(), "username", 5, 20, errors);
+            if (userRepository.existsByUsername(user.getUsername())) {
+                errors.rejectValue("username", "field.duplicate", "Username already exists.");
+            }
         }
     }
+
+    private void validateTextFields(User user, Errors errors) {
+        validateFieldLength(user.getGoal(), "goal", 5, 500, errors);
+        validateFieldLength(user.getInterests(), "interests", 4, 500, errors);
+        validateFieldLength(user.getSkills(), "skills", 5, 500, errors);
+    }
+
+    private void validateFieldLength(String value, String fieldName, int minLength, int maxLength, Errors errors) {
+        if (value != null && (value.length() < minLength || value.length() > maxLength)) {
+            errors.rejectValue(fieldName, "field.size", fieldName + " must be between " + minLength + " and " + maxLength + " characters.");
+        }
+    }
+
 
     /**
      * Checks if the value is null or empty.
@@ -78,6 +92,6 @@ public class ValidateUserCommon implements Validator {
      * @return true if the value is null or empty, false otherwise
      */
     private boolean valueNullOrEmpty(String value) {
-        return value != null && !value.isEmpty();
+        return value != null && !value.trim().isEmpty();
     }
 }
