@@ -104,11 +104,10 @@ public class UserService implements UseService {
             throw new LoginFailedException("Invalid username or password");
         } catch (UsernameNotFoundException e) {
             throw new LoginFailedException("User not found");
-        }catch (InternalAuthenticationServiceException e) {
+        } catch (InternalAuthenticationServiceException e) {
             throw new AlreadyLoggedInException("User is already logged in");
-        }
-        catch (Exception e) {
-            throw new LoginFailedException("Login failed: " + e);
+        } catch (Exception e) {
+            throw new LoginFailedException("Login failed");
         }
     }
 
