@@ -3,13 +3,12 @@ package com.roadmap.backendapi.request.progress;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Setter
 @Getter
 public class UpdateProgressRequest {
-    private Timestamp completed_at;
-    private Long userId;
-    private Long milestoneId;
+    BigDecimal percentage;
     private Long progressId;
 }
