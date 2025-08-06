@@ -32,6 +32,12 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
 
+    /**
+     * Adds resources to a milestone based on the user's roadmap.
+     *
+     * @param milestone the milestone to which resources will be added
+     * @param roadmap   the roadmap containing user data and details
+     */
     @Override
     public void addResourcesToMilestone(Milestone milestone , Roadmap roadmap) {
         String prompt = getResourcePrompt(milestone,roadmap);
@@ -50,6 +56,14 @@ public class ResourceServiceImpl implements ResourceService {
         milestone.setResources(resource);
     }
 
+
+    /**
+     * Generates a prompt for the AI to recommend resources based on the user's roadmap and milestone.
+     *
+     * @param milestone the milestone for which resources are to be recommended
+     * @param roadmap   the roadmap containing user data and details
+     * @return a formatted prompt string for resource recommendation
+     */
     private String getResourcePrompt(Milestone milestone, Roadmap roadmap) {
 
         validateRoadmapData(roadmap);
@@ -100,20 +114,37 @@ public class ResourceServiceImpl implements ResourceService {
 
     }
 
+    /**
+     * Checks if a string is null or empty.
+     *
+     * @param str the string to check
+     * @return true if the string is null or empty, false otherwise
+     */
     private  boolean isNullOrEmpty(String str) {
         return str == null || str.isEmpty();
     }
 
+    /**
+     * Validates the data of a roadmap.
+     *
+     * @param roadmap the roadmap to validate
+     * @throws UserDataRequiredException if any required field is empty
+     */
     private void validateRoadmapData(Roadmap roadmap) {
-        if (isNullOrEmpty(roadmap.getUser().getGoal()) ||
-                isNullOrEmpty(roadmap.getUser().getInterests()) ||
-                isNullOrEmpty(roadmap.getUser().getSkills()) ||
-                isNullOrEmpty(roadmap.getTitle()) ||
-                isNullOrEmpty(roadmap.getDescription())){
+        if (isNullOrEmpty(roadmap.getUser().getGoal())
+                || roadmap.getUser().getInterests().isEmpty()
+                || roadmap.getUser().getSkills().isEmpty()
+                || isNullOrEmpty(roadmap.getTitle())
+                || isNullOrEmpty(roadmap.getDescription())){
             throw new UserDataRequiredException();
         }
     }
 
+    /**     * Validates the data of a milestone.
+     *
+     * @param milestone the milestone to validate
+     * @throws MilestoneUnexpectedException if any required field is empty
+     */
     private void validateMilestoneData(Milestone milestone) {
         if ( isNullOrEmpty(milestone.getTitle()) ||
                 isNullOrEmpty(milestone.getDescription()) ||
@@ -123,11 +154,23 @@ public class ResourceServiceImpl implements ResourceService {
         }
     }
 
+
+    /**
+     * Adds a new resource to the repository.
+     *
+     * @param request the resource to be added
+     * @return the added resource as a DTO
+     */
     @Override
     public ResourceDTO updateResource(UpdateResourceRequest request) {
         return null;
     }
 
+    /**
+     * Deletes a resource from the repository.
+     *
+     * @param resourceId the ID of the resource to be deleted
+     */
     @Override
     public void deleteResource(Long resourceId) {
         if(resourceRepository.existsById(resourceId))
@@ -136,6 +179,12 @@ public class ResourceServiceImpl implements ResourceService {
             throw new ResourceNotFoundException();
     }
 
+    /**
+     * Retrieves a resource by its ID.
+     *
+     * @param resourceId the ID of the resource to be retrieved
+     * @return the resource as a DTO
+     */
     @Override
     public ResourceDTO getResourceById(Long resourceId) {
         return resourceRepository.findById(resourceId)
@@ -143,6 +192,12 @@ public class ResourceServiceImpl implements ResourceService {
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
+    /**
+     * Retrieves a resource by its title.
+     *
+     * @param title the title of the resource to be retrieved
+     * @return the resource as a DTO
+     */
     @Override
     public ResourceDTO getResourceByTitle(String title) {
         return Optional.ofNullable(resourceRepository.findByTitle(title))
@@ -150,6 +205,11 @@ public class ResourceServiceImpl implements ResourceService {
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
+    /**
+     *
+     * @param type
+     * @return
+     */
     @Override
     public ResourceDTO getResourceByType(String type) {
         return Optional.ofNullable(resourceRepository.findByType(ResourceType.valueOf(type)))
@@ -157,6 +217,13 @@ public class ResourceServiceImpl implements ResourceService {
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
+
+    /**
+     * Retrieves a resource by its URL.
+     *
+     * @param url the URL of the resource to be retrieved
+     * @return the resource as a DTO
+     */
     @Override
     public ResourceDTO getResourceByUrl(String url) {
         return Optional.ofNullable(resourceRepository.findByUrl(url))
@@ -164,6 +231,12 @@ public class ResourceServiceImpl implements ResourceService {
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
+    /**
+     * Retrieves all resources associated with a specific milestone ID.
+     *
+     * @param milestoneId the ID of the milestone
+     * @return a list of resources as DTOs
+     */
     @Override
     public List<ResourceDTO> getResourceByMilestoneId(Long milestoneId) {
         return resourceRepository.findByMilestoneId(milestoneId).stream()
