@@ -3,8 +3,8 @@ package com.roadmap.backendapi.controller;
 import com.roadmap.backendapi.exception.AppException;
 import com.roadmap.backendapi.exception.user.InvalidTokenException;
 import com.roadmap.backendapi.request.user.LoginRequest;
-import com.roadmap.backendapi.request.user.RegistrationRequest;
-import com.roadmap.backendapi.request.user.UpdateUserRequest;
+import com.roadmap.backendapi.request.user.UserCreateDTO;
+import com.roadmap.backendapi.request.user.UserUpdateDTO;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<APIResponse> register(@RequestBody @Validated RegistrationRequest registrationRequestDTO) {
+    public ResponseEntity<APIResponse> register(@RequestBody @Validated UserCreateDTO registrationRequestDTO) {
         try {
             UserDTO registeredUser = userService.registerUser(registrationRequestDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(new APIResponse("User registered successfully", registeredUser));
@@ -108,9 +108,9 @@ public ResponseEntity<APIResponse> remove(@PathVariable Long id) {
 }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@PathVariable Long id, @RequestBody UpdateUserRequest updateRequestDTO) {
+    public ResponseEntity<APIResponse> update(@PathVariable Long id, @RequestBody UserUpdateDTO userUpdateDto) {
         try {
-            UserDTO updatedUser = userService.updateUser(id,updateRequestDTO);
+            UserDTO updatedUser = userService.updateUser(id,userUpdateDto);
             return ResponseEntity.ok(new APIResponse("User updated successfully", updatedUser));
         } catch (AppException e) {
             return ResponseEntity.status(e.getStatus()).body(new APIResponse("User update failed: " , e.getErrors()));

@@ -77,19 +77,6 @@ public ResponseEntity<APIResponse> deleteProgress(@PathVariable Long progressId)
         ProgressDTO progressDTO = progressService.getProgressById(progressId);
         return ResponseEntity.ok(new APIResponse("Progress retrieved successfully",progressDTO));
     }
-
-    /**
-     * GET endpoint to retrieve a progress by user ID.
-     *
-     * @param userId The ID of the user whose progress to retrieve
-     * @return ResponseEntity containing the progress DTO
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<APIResponse> getProgressByUserId(@PathVariable Long userId) {
-        ProgressDTO progressDTO = progressService.getProgressByUserId(userId);
-        return ResponseEntity.ok(new APIResponse( "Progress retrieved successfully",progressDTO));
-    }
-
     /**
      * GET endpoint to retrieve a progress by milestone ID.
      *
