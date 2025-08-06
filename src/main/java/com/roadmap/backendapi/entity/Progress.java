@@ -1,14 +1,20 @@
 package com.roadmap.backendapi.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
-import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
  * Entity class representing a Progress.
- * This class is used to map the Progress table in the database.
- * It contains fields that represent the properties of a Progress.
+ * Tracks user progress on milestones with percentage completion.
  *
  * @see com.roadmap.backendapi.entity.User
  * @see com.roadmap.backendapi.entity.Milestone
@@ -20,18 +26,33 @@ import java.sql.Timestamp;
 @Setter
 @Getter
 public class Progress {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = true)
-    private Timestamp completed_at;
+    @Column(precision = 5, scale = 2, nullable = false)
+    @NotNull(message = "Progress percentage is required")
+    @DecimalMin(value = "0.00", message = "Progress percentage cannot be negative")
+    @DecimalMax(value = "100.00", message = "Progress percentage cannot exceed 100%")
+    @Builder.Default
+    private BigDecimal progressPercentage = BigDecimal.ZERO;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "completed_at")
+    @PastOrPresent(message = "Completion date cannot be in the future")
+    private LocalDateTime completedAt;
 
-    @ManyToOne
+    @LastModifiedDate
+    @Column(name = "last_modified_date")
+    private Instant lastModifiedDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "milestone_id", nullable = false)
+    @NotNull(message = "Milestone is required")
     private Milestone milestone;
+
+    @CreatedDate
+    @Column(name = "created_date")
+    private Instant createdDate;
+
 }
