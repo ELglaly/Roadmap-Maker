@@ -1,6 +1,7 @@
 package com.roadmap.backendapi.security;
 
-import com.roadmap.backendapi.entity.User;
+
+import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.exception.user.UserNotFoundException;
 import com.roadmap.backendapi.repository.UserRepository;
 import org.springframework.cache.annotation.Cacheable;

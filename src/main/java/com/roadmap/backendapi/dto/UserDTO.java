@@ -2,8 +2,10 @@ package com.roadmap.backendapi.dto;
 
 import com.roadmap.backendapi.entity.Address;
 import com.roadmap.backendapi.entity.PhoneNumber;
+import com.roadmap.backendapi.entity.enums.UserRoles;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -11,7 +13,7 @@ import java.util.List;
  * This class is used to transfer data between the application and the client.
  * It contains fields that represent the properties of a User.
  *
- * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.entity.user.User
  */
 
 @Builder
@@ -20,20 +22,19 @@ import java.util.List;
 @Setter
 @Getter
 @ToString
-public class UserDTO {
+public class UserDTO implements Serializable {
+
     private Long id;
     private String firstName;
     private String lastName;
-    private String email;
     private String username;
-    private String password;
-    private String role;
-    private boolean enabled;
     private String goal;
-    private String interests;
-    private String skills ;
+    private List<String> interests;
+    private List<String> skills;
+    private UserRoles role;
+
+    // Embedded UserContact fields
+    private String email;
+    private PhoneNumber phone;
     private Address address;
-    private PhoneNumber phoneNumber;
-    private List<RoadmapDTO> roadmapsDTO;
-    private List<ProgressDTO> progressDTO;
 }

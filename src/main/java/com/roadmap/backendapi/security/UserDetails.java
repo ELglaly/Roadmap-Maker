@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.security;
 
-import com.roadmap.backendapi.entity.User;
+import com.roadmap.backendapi.entity.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -47,10 +47,10 @@ public class UserDetails implements org.springframework.security.core.userdetail
 
         return UserDetails.builder()
                 .username(user.getUsername())
-                .password(user.getPassword())
-                .email(user.getEmail())
+                .password(user.getUserSecurity().getPasswordHash())
+                .email(user.getUserContact().getEmail())
                 .id(user.getId())
-                .enabled(user.isEnabled())
+                .enabled(user.getUserSecurity().isEnabled())
                 .authorities(authorities)
                 .build();
     }

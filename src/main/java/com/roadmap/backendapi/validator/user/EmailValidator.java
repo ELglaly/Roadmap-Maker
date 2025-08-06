@@ -44,7 +44,7 @@ public class EmailValidator implements Validator {
             if (!email.isEmpty() && !isValidEmail(email)) {
                 errors.rejectValue("email", "field.invalid", "Invalid email format.");
             }
-            else if (!email.isEmpty() && userRepository.existsByEmail(email)) {
+            else if (!email.isEmpty() && userRepository.existsByUserContactEmail(email)) {
                 ErrorResponse errorResponse = new ErrorResponse("email", "Email already exists");
                 throw new EmailAlreadyExistsException(List.of(errorResponse));
             }

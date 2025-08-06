@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class changePasswordRequest {
+public class ChangePasswordRequest {
     @NotBlank
     private String password;
 

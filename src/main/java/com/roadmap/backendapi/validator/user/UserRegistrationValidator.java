@@ -1,8 +1,6 @@
 package com.roadmap.backendapi.validator.user;
 
-import com.roadmap.backendapi.entity.User;
-import com.roadmap.backendapi.repository.UserRepository;
-import com.roadmap.backendapi.request.user.RegistrationRequest;
+import com.roadmap.backendapi.entity.user.User;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -37,12 +35,12 @@ public class UserRegistrationValidator implements Validator {
     public void validate(Object target, Errors errors) {
         User user= (User) target;
         ValidationUtils.invokeValidator(validateUserCommon, user, errors);
-        if(user.getPassword()==null)
+        if(user.getUserSecurity().getPasswordHash() ==null)
         {
             errors.rejectValue("password", "field.required", "Password is required.");
         }
         else {
-            ValidationUtils.invokeValidator(passwordValidator, user.getPassword(), errors);
+            ValidationUtils.invokeValidator(passwordValidator, user.getUserSecurity().getPasswordHash(), errors);
         }
 
     }

@@ -1,8 +1,7 @@
 package com.roadmap.backendapi.validator.user;
 
-import com.roadmap.backendapi.entity.User;
+import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.mapper.UserMapper;
-import com.roadmap.backendapi.request.user.UpdateUserRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.*;
 
@@ -42,17 +41,17 @@ public class UserUpdateValidator implements Validator {
 
         ValidationUtils.invokeValidator(validateUserCommon, updateUserRequest, errors);
 
-        if (updateUserRequest.getPhoneNumber() != null) {
-            BindingResult phoneErrors = new BeanPropertyBindingResult(updateUserRequest.getPhoneNumber(), errors.getObjectName());
-            ValidationUtils.invokeValidator(phoneNumberValidator, updateUserRequest.getPhoneNumber(), phoneErrors);
+        if (updateUserRequest.getUserContact().getPhoneNumber() != null) {
+            BindingResult phoneErrors = new BeanPropertyBindingResult(updateUserRequest.getUserContact().getPhoneNumber(), errors.getObjectName());
+            ValidationUtils.invokeValidator(phoneNumberValidator, updateUserRequest.getUserContact().getPhoneNumber(), phoneErrors);
             if (phoneErrors.hasErrors()) {
                 errors.addAllErrors(phoneErrors);
             }
         }
 
-        if (updateUserRequest.getAddress() != null) {
-            BindingResult addressErrors = new BeanPropertyBindingResult(updateUserRequest.getAddress(), errors.getObjectName());
-            ValidationUtils.invokeValidator(addressValidator, updateUserRequest.getAddress(), addressErrors);
+        if (updateUserRequest.getUserContact().getAddress() != null) {
+            BindingResult addressErrors = new BeanPropertyBindingResult(updateUserRequest.getUserContact().getAddress(), errors.getObjectName());
+            ValidationUtils.invokeValidator(addressValidator, updateUserRequest.getUserContact().getAddress(), addressErrors);
             if (addressErrors.hasErrors()) {
                 errors.addAllErrors(addressErrors);
             }

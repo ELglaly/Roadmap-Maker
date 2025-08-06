@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.validator.user;
 
-import com.roadmap.backendapi.entity.User;
+import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -51,10 +51,10 @@ public class ValidateUserCommon implements Validator {
     }
 
     private void validateEmail(User user, Errors errors) {
-        if (valueNullOrEmpty(user.getEmail())) {
+        if (valueNullOrEmpty(user.getUserContact().getEmail())) {
             errors.rejectValue("email", "field.required", "Email is required.");
         } else {
-            ValidationUtils.invokeValidator(emailValidator, user.getEmail(), errors);
+            ValidationUtils.invokeValidator(emailValidator, user.getUserContact().getEmail(), errors);
         }
     }
 
@@ -74,8 +74,6 @@ public class ValidateUserCommon implements Validator {
 
     private void validateTextFields(User user, Errors errors) {
         validateFieldLength(user.getGoal(), "goal", 5, 500, errors);
-        validateFieldLength(user.getInterests(), "interests", 4, 500, errors);
-        validateFieldLength(user.getSkills(), "skills", 5, 500, errors);
     }
 
     private void validateFieldLength(String value, String fieldName, int minLength, int maxLength, Errors errors) {
