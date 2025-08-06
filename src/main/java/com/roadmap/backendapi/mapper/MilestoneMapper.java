@@ -20,6 +20,7 @@ public interface MilestoneMapper {
   MilestoneMapper INSTANCE = Mappers.getMapper(MilestoneMapper.class);
 
   @Mapping(target = "resourcesDTO", source = "resources")
+    @Mapping(target = "progressDTOS", source = "progress")
   MilestoneDTO toDTO(Milestone milestone);
 
 }
