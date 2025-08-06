@@ -2,6 +2,7 @@ package com.roadmap.backendapi.entity;
 
 import com.roadmap.backendapi.entity.enums.MilestoneStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.Date;
@@ -20,7 +21,6 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 public class Milestone {
 
     @Id
@@ -28,22 +28,27 @@ public class Milestone {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank
     private String title;
 
     @Column(nullable = false,columnDefinition = "TEXT")
+    @NotBlank
     private String description;
 
-    //@Column(nullable = false)
+    @Column(nullable = false)
+    @NotBlank
     private Date dueDate;
 
-    @Column(nullable = false,columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
+    @NotBlank
     private String actionableSteps;
 
     @Column(nullable = false,columnDefinition = "TEXT" )
+    @NotBlank
     private String prerequisites;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,columnDefinition = "ENUM('NOT_STARTED','IN_PROGRESS','COMPLETED')")
+    @Column(nullable = false)
     private MilestoneStatus status;
 
     @ManyToOne
