@@ -12,10 +12,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @see org.springframework.data.jpa.repository.JpaRepository
  */
 public interface ProgressRepository extends JpaRepository<Progress, Long> {
-    Progress findByUserId(Long userId);
-    Boolean existsByUserId(Long userId);
 
     Progress findByMilestoneId(Long milestoneId);
 
-    Boolean existsByUserIdAndMilestoneId(Long userId, Long milestoneId);
+    boolean existsByMilestoneId(Long milestoneId);
 }
