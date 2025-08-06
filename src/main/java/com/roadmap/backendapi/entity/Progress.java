@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  * Entity class representing a Progress.
  * Tracks user progress on milestones with percentage completion.
  *
- * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.entity.Progress
  * @see com.roadmap.backendapi.entity.Milestone
  */
 @Entity
