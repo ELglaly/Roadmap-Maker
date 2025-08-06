@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class JwtService {
     // If using Redis or another distributed cache:
-    private final RedisTemplate<String, Date> redisTemplate;
+ //   private final RedisTemplate<String, Date> redisTemplate;
 
 
     private final String secretKey;
@@ -43,8 +43,8 @@ public class JwtService {
     private long logoutTimeMs;
 
 
-    public JwtService(RedisTemplate<String, Date> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public JwtService() {
+    //    this.redisTemplate = redisTemplate;
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
             SecretKey sk = keyGenerator.generateKey();
@@ -149,8 +149,9 @@ public class JwtService {
         if (token == null || token.trim().isEmpty()) {
             return false;
         }
-        long expirationTime = Objects.requireNonNull(redisTemplate.opsForValue().get(token)).getTime();
-        return expirationTime > System.currentTimeMillis();
+        //TODO
+       // long expirationTime = Objects.requireNonNull(redisTemplate.opsForValue().get(token)).getTime();
+        return false;
     }
 
     public void blacklistToken(String token) {
@@ -160,14 +161,6 @@ public class JwtService {
         else if (isTokenBlacklisted(token)) {
             throw new SecurityException("Token is already blacklisted");
         }
-
-        Date expirationDate = new Date(System.currentTimeMillis() + logoutTimeMs);
-        redisTemplate.opsForValue().set(
-                token,
-                expirationDate,
-                logoutTimeMs,
-                TimeUnit.MILLISECONDS
-        );
     }
 
     private Claims parseClaims(String token) {

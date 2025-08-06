@@ -6,6 +6,5 @@ import lombok.Setter;
 @Setter
 @Getter
 public class CreateProgressRequest {
-    private Long userId;
     private Long milestoneId;
 }

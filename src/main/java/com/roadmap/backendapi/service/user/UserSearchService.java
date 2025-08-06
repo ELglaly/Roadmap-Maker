@@ -1,7 +1,6 @@
 package com.roadmap.backendapi.service.user;
 
 import com.roadmap.backendapi.dto.UserDTO;
-import com.roadmap.backendapi.request.user.LoginRequest;
 
 /**
  * UserSearchService is an interface that defines methods for searching and retrieving user information.

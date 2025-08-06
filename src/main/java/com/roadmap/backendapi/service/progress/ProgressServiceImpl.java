@@ -3,7 +3,6 @@ package com.roadmap.backendapi.service.progress;
 import com.roadmap.backendapi.dto.ProgressDTO;
 import com.roadmap.backendapi.entity.Milestone;
 import com.roadmap.backendapi.entity.Progress;
-import com.roadmap.backendapi.entity.User;
 import com.roadmap.backendapi.exception.progress.ProgressAlreadyExistsException;
 import com.roadmap.backendapi.exception.progress.ProgressNotFoundException;
 import com.roadmap.backendapi.mapper.ProgressMapper;
@@ -12,7 +11,9 @@ import com.roadmap.backendapi.request.progress.CreateProgressRequest;
 import com.roadmap.backendapi.request.progress.UpdateProgressRequest;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -27,26 +28,44 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
 
+    /**
+     * Updates the progress of a milestone.
+     *
+     * @param request the request containing the progress update details
+     * @return the updated ProgressDTO
+     * @throws ProgressNotFoundException if the progress with the given ID does not exist
+     * @throws ProgressAlreadyExistsException if the progress percentage is invalid
+     */
     @Override
     public ProgressDTO updateProgress(UpdateProgressRequest request) {
-        return progressRepository.findById(request.getProgressId())
-                .map(progress -> {
-                    if (request.getCompleted_at() != null)
-                        progress.setCompleted_at(request.getCompleted_at());
-                    
-                    return progressMapper.toDTO(progressRepository.save(progress));
-                })
+        Progress progress = progressRepository.findById(request.getProgressId())
                 .orElseThrow(ProgressNotFoundException::new);
+        if (request.getPercentage().compareTo(BigDecimal.ZERO) < 0 ||
+                request.getPercentage().compareTo(new BigDecimal("100")) > 0) {
+            throw new ProgressAlreadyExistsException();
+        }
+        else {
+            markAsCompleted(progress, request);
+        }
+        return progressMapper.toDTO(progressRepository.save(progress));
     }
 
+
+
+    /**
+     * Creates a new progress entry for a milestone.
+     *
+     * @param request the request containing the milestone ID
+     * @return the created ProgressDTO
+     * @throws ProgressAlreadyExistsException if a progress entry for the milestone already exists
+     */
     @Override
     public ProgressDTO createProgress(CreateProgressRequest request) {
-        if (progressRepository.existsByUserIdAndMilestoneId(request.getUserId(), request.getMilestoneId())) {
+        if (progressRepository.existsByMilestoneId(request.getMilestoneId())) {
             throw new ProgressAlreadyExistsException();
         }
             // Create a new Progress entity without fetching the User from the database
             Progress progress = Progress.builder()
-                .user(User.builder().id(request.getUserId()).build())
                 .milestone(Milestone.builder().id(request.getMilestoneId()).build())
                 .build();
 
@@ -54,6 +73,26 @@ public class ProgressServiceImpl implements ProgressService {
             return progressMapper.toDTO(progressRepository.save(progress));
     }
 
+
+    /**
+     * Retrieves the progress percentage as an integer for a given progress ID.
+     * @param progressId
+     * @return
+     */
+    @Override
+    public int getProgressAsInteger(Long progressId) {
+      return progressRepository.findById(progressId)
+                .map(progress -> progress.getProgressPercentage().intValue())
+              .orElseThrow(ProgressNotFoundException::new);
+    }
+
+
+    /**
+     * Deletes a progress entry by its ID.
+     *
+     * @param progressId the ID of the progress entry to delete
+     * @throws ProgressNotFoundException if the progress with the given ID does not exist
+     */
     @Override
     public void deleteProgress(Long progressId) {
         if (progressRepository.existsById(progressId))
@@ -63,6 +102,31 @@ public class ProgressServiceImpl implements ProgressService {
 
     }
 
+
+    /**
+     * Marks the progress as completed based on the provided request.
+     *
+     * @param progress the Progress entity to be updated
+     * @param request  the request containing the percentage to update
+     */
+    @Override
+    public void markAsCompleted(Progress progress, UpdateProgressRequest request) {
+        progress.setProgressPercentage(request.getPercentage());
+        if (progress.getProgressPercentage() .compareTo(new BigDecimal("100.00")) >= 0) {
+            progress.setCompletedAt(LocalDateTime.now());
+        } else {
+            progress.setCompletedAt(null);
+        }
+    }
+
+
+    /**
+     * Retrieves the progress by its ID.
+     *
+     * @param progressId the ID of the progress entry
+     * @return ProgressDTO containing the progress details
+     * @throws ProgressNotFoundException if the progress with the given ID does not exist
+     */
     @Override
     public ProgressDTO getProgressById(Long progressId) {
         return progressRepository.findById(progressId)
@@ -70,17 +134,33 @@ public class ProgressServiceImpl implements ProgressService {
                 .orElseThrow(ProgressNotFoundException::new);
     }
 
-    @Override
-    public ProgressDTO getProgressByUserId(Long userId) {
-        return Optional.ofNullable(progressRepository.findByUserId(userId))
-                .map(progressMapper::toDTO)
-                .orElseThrow(ProgressNotFoundException::new);
-    }
 
+
+    /**
+     * Retrieves the progress by its milestone ID.
+     *
+     * @param milestoneId the ID of the milestone
+     * @return ProgressDTO containing the progress details
+     * @throws ProgressNotFoundException if the progress for the given milestone does not exist
+     */
     @Override
     public ProgressDTO getProgressByMilestoneId(Long milestoneId) {
         return Optional.ofNullable(progressRepository.findByMilestoneId(milestoneId))
                 .map(progressMapper::toDTO)
+                .orElseThrow(ProgressNotFoundException::new);
+    }
+
+    /**
+     * Checks if the progress with the given ID is completed.
+     *
+     * @param progressId the ID of the progress entry
+     * @return true if the progress is completed, false otherwise
+     * @throws ProgressNotFoundException if the progress with the given ID does not exist
+     */
+    @Override
+    public boolean isCompleted(Long progressId) {
+        return progressRepository.findById(progressId)
+                .map(progress -> progress.getCompletedAt() != null)
                 .orElseThrow(ProgressNotFoundException::new);
     }
 }
