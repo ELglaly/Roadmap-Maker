@@ -41,7 +41,8 @@ public class RedisConfig {
                 .cacheDefaults(redisCacheConfiguration)
                 .build();
     }
-    
+
+
     /**
      * Creates a RedisTemplate bean for storing and retrieving objects from Redis.
      *
