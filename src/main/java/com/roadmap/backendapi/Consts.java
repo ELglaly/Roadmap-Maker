@@ -11,4 +11,13 @@ public class Consts {
         public static final String PASSWORD_CONSTRAINS = "Password must contain at least one digit, one lowercase letter, one uppercase letter, one special character, and no whitespace";
 
     }
+
+    public static class RegularExpression
+    {
+        public static final String STRING_PATTERN = "^[A-Za-z\\s'-]{2,50}$";
+        public static final String STRING_PATTERN_ERROR = "must be 2-50 characters, letters, spaces, hyphens and apostrophes only";
+        public static final String ZIB_PATTERN = "^[A-Z0-9\\s-]{3,15}$";
+        public static final String ZIB_PATTERN_ERROR = "ZIP code must be 3-15 characters, alphanumeric with spaces and hyphens";
+
+    }
 }
