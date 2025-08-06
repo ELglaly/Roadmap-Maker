@@ -1,6 +1,9 @@
 package com.roadmap.backendapi.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 /**
@@ -20,12 +23,17 @@ public class PhoneNumber {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
-    @Column(length = 5, nullable = false)
-    private String countryCode;
-    @Column(length = 10, nullable = false)
-    private String number;
 
-    @OneToOne
-    private User user;
+    @Column(length = 5, nullable = false)
+    @NotBlank(message = "Country code is required")
+    @Size(min = 1, max = 5, message = "Country code must be 1-5 characters")
+    @Pattern(regexp = "\\+?[1-9]\\d{0,3}", message = "Invalid country code format")
+    private String countryCode;
+
+    @Column(length = 15, nullable = false)
+    @NotBlank(message = "Phone number is required")
+    @Size(min = 4, max = 15, message = "Phone number must be 4-15 digits")
+    @Pattern(regexp = "\\d+", message = "Phone number must contain digits only")
+    private String number;
 
 }
