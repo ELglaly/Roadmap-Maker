@@ -1,7 +1,7 @@
 package com.roadmap.backendapi.repository;
 
 import com.roadmap.backendapi.entity.Roadmap;
-import com.roadmap.backendapi.entity.User;
+import com.roadmap.backendapi.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
