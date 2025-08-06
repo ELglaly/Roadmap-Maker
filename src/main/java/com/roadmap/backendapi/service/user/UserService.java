@@ -1,22 +1,20 @@
 package com.roadmap.backendapi.service.user;
 
-import com.roadmap.backendapi.Config.PasswordEncoderConfig;
 import com.roadmap.backendapi.Consts;
 import com.roadmap.backendapi.dto.UserDTO;
-import com.roadmap.backendapi.entity.enums.UserRoles;
+import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.exception.user.*;
 import com.roadmap.backendapi.mapper.UserMapper;
-import com.roadmap.backendapi.entity.User;
 import com.roadmap.backendapi.repository.UserRepository;
 import com.roadmap.backendapi.request.user.LoginRequest;
-import com.roadmap.backendapi.request.user.RegistrationRequest;
-import com.roadmap.backendapi.request.user.UpdateUserRequest;
-import com.roadmap.backendapi.request.user.changePasswordRequest;
-import com.roadmap.backendapi.security.UserDetails;
+import com.roadmap.backendapi.request.user.UserCreateDTO;
+import com.roadmap.backendapi.request.user.ChangePasswordRequest;
+import com.roadmap.backendapi.request.user.UserUpdateDTO;
 import com.roadmap.backendapi.security.jwt.JwtService;
 import com.roadmap.backendapi.validator.user.PasswordValidator;
 import com.roadmap.backendapi.validator.user.UserRegistrationValidator;
 import com.roadmap.backendapi.validator.user.UserUpdateValidator;
+import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,6 +37,8 @@ import java.util.Optional;
  * UserServiceImpl is a service class that implements the UseService interface.
  * It provides methods for managing user accounts, including registration, login, logout, and user information retrieval.
  */
+
+
 @Service
 public class UserService implements UseService {
 
@@ -73,7 +73,7 @@ public class UserService implements UseService {
      */
     @Override
     public UserDTO getUserById(Long userId) {
-        User  user =userRepository.findById(userId)
+        User user =userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
         return userMapper.toDTO(user);
     }
@@ -119,11 +119,9 @@ public class UserService implements UseService {
      */
     @Override
     public void logoutUser(String token) {
-
         JwtService.blacklistToken(token);
         // . Clear authentication context
         SecurityContextHolder.clearContext();
-
     }
 
     /**
@@ -134,7 +132,7 @@ public class UserService implements UseService {
      * @throws UserNotFoundException if the user is not found
      */
     public UserDTO getUserByEmail(String email) {
-        return Optional.ofNullable(userRepository.findByEmail(email))
+        return Optional.ofNullable(userRepository.findByUserContactEmail(email))
                 .map(userMapper::toDTO)
                 .orElseThrow(UserNotFoundException::new);
     }
@@ -153,20 +151,19 @@ public class UserService implements UseService {
                 .orElseThrow(UserNotFoundException::new);
     }
 
+
     /**
-     * Registers a new user with the provided registration request.
+     * Registers a new user.
      *
-     * @param registrationRequest the RegistrationRequest object containing user details
+     * @param userCreateDto the UserCreateDTO object containing user details
      * @return the UserDTO object representing the registered user
-     * @throws UserValidationException if user validation fails
+     * @throws UserValidationException if validation fails
      */
     @CachePut(value = "userCache", key = "#result.username")
-    public UserDTO registerUser(RegistrationRequest registrationRequest)
+    public UserDTO registerUser(UserCreateDTO userCreateDto)
     {
-        User user= validateUser(registrationRequest);
-        user.setRole(UserRoles.USER);
-        user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
-        user.setEnabled(false);
+        User user= validateUser(userCreateDto);
+        user.getUserSecurity().setPasswordHash(passwordEncoder.encode(userCreateDto.getPasswordHash()));
         user= userRepository.save(user);
         return userMapper.toDTO(user);
     }
@@ -180,7 +177,7 @@ public class UserService implements UseService {
      * @throws PasswordException if password validation fails
      */
     @Override
-    public void changePassword(Long userId, changePasswordRequest request) {
+    public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         Errors errors = new BeanPropertyBindingResult(request, "newPassword");
@@ -191,7 +188,7 @@ public class UserService implements UseService {
             errors.rejectValue("confirmPassword", "password.match", Consts.PasswordErrorMessage.PASSWORD_MISMATCH);
             throw new PasswordException(errors);
         }
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getUserSecurity().getPasswordHash())) {
             errors.rejectValue("password", "password.invalid", Consts.PasswordErrorMessage.PASSWORD_INCORRECT);
             throw new PasswordException(errors);
         }
@@ -199,7 +196,7 @@ public class UserService implements UseService {
         if (errors.hasErrors()) {
             throw new PasswordException(errors);
         }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.getUserSecurity().setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
@@ -220,14 +217,14 @@ public class UserService implements UseService {
         }
 
         User user ;
-        if (target instanceof RegistrationRequest registrationRequest) {
+        if (target instanceof UserCreateDTO registrationRequest) {
             errors = new BeanPropertyBindingResult(registrationRequest, "registrationRequest");
             user = userMapper.toEntity(registrationRequest);
             userRegistrationValidator.validate(user, errors);
         }
-        else if (target instanceof UpdateUserRequest updateUserRequest) {
-            errors = new BeanPropertyBindingResult(updateUserRequest, "updateUserRequest");
-            user = userMapper.toEntity(updateUserRequest);
+        else if (target instanceof UserUpdateDTO userUpdateDto) {
+            errors = new BeanPropertyBindingResult(userUpdateDto, "updateUserRequest");
+            user = userMapper.toEntity(userUpdateDto);
             userUpdateValidator.validate(user, errors);
         }
         else {
@@ -242,17 +239,18 @@ public class UserService implements UseService {
         return user;
     }
 
+
     /**
-     * Updates the user information based on the provided UpdateUserRequest.
+     * Updates a user's information.
      *
      * @param id the ID of the user to update
-     * @param updateUserRequest the UpdateUserRequest object containing updated user details
+     * @param userUpdateDto the UserUpdateDTO object containing updated user details
      * @return the UserDTO object representing the updated user
-     * @throws UserNotFoundException if the user is not found
+     * @throws UserValidationException if validation fails
      */
     @CacheEvict(value = "userCache", key = "#result.username")
-    public UserDTO updateUser(Long id, UpdateUserRequest updateUserRequest) {
-        User user= validateUser(updateUserRequest);
+    public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDto) {
+        User user= validateUser(userUpdateDto);
         user= userRepository.save(user);
         return userMapper.toDTO(user);
     }
