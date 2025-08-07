@@ -3,11 +3,9 @@ package com.roadmap.backendapi.validator.user;
 import com.roadmap.backendapi.entity.PhoneNumber;
 import com.roadmap.backendapi.exception.phoneNumber.PhoneNumberAlreadyExistsException;
 import com.roadmap.backendapi.repository.PhoneNumberRepository;
-import com.roadmap.backendapi.repository.UserRepository;
 import com.roadmap.backendapi.response.ErrorResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
 import java.util.List;
@@ -49,8 +47,8 @@ public class PhoneNumberValidator implements Validator {
             errors.rejectValue("number", "field.invalid", "Invalid phone number format.");
         }
         if (phoneNumberRepository.existsByNumber(phoneNumber.getNumber())) {
-            ErrorResponse errorResponse =new ErrorResponse("number", "Phone number already exists");
-            throw new PhoneNumberAlreadyExistsException(List.of(errorResponse));
+            ErrorResponse ErrorResponse =new ErrorResponse("number", "Phone number already exists");
+            throw new PhoneNumberAlreadyExistsException(List.of(ErrorResponse));
 
         }
     }
