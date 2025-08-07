@@ -1,11 +1,12 @@
 package com.roadmap.backendapi.validator.user;
 
-import com.roadmap.backendapi.Consts;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.utils.Const;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
+
+import static com.roadmap.backendapi.utils.Const.PasswordErrorMessages.PASSWORD_REQUIRED;
 
 /**
  * PasswordValidator is a Spring Validator that validates password strings.
@@ -30,12 +31,12 @@ public class PasswordValidator implements Validator {
     public void validate(Object target, Errors errors) {
         String password = (String) target;
 
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "password", "password.required", Consts.PasswordErrorMessage.PASSWORD_REQUIRED);
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "password", "password.required", PASSWORD_REQUIRED);
         if (!password.isEmpty() && password.length() < 8) {
-            errors.rejectValue("password", "password.minlength", Consts.PasswordErrorMessage.PASSWORD_TOO_SHORT);
+            errors.rejectValue("password", "password.minlength", Const.PasswordErrorMessages.PASSWORD_TOO_SHORT);
         }
         else if (!password.isEmpty() && !isValidPassword(password)) {
-            errors.rejectValue("password", "password.constrains", Consts.PasswordErrorMessage.PASSWORD_CONSTRAINS );
+            errors.rejectValue("password", "password.constrains", Const.PasswordErrorMessages.PASSWORD_CONSTRAINTS );
         }
     }
 
