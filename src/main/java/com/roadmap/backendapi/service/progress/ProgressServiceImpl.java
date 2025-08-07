@@ -12,7 +12,6 @@ import com.roadmap.backendapi.request.progress.UpdateProgressRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -61,12 +60,9 @@ public class ProgressServiceImpl implements ProgressService {
      */
     @Override
     public ProgressDTO createProgress(CreateProgressRequest request) {
-        if (progressRepository.existsByMilestoneId(request.getMilestoneId())) {
-            throw new ProgressAlreadyExistsException();
-        }
+        //TODO: Validate the request and ensure the milestone exists
             // Create a new Progress entity without fetching the User from the database
             Progress progress = Progress.builder()
-                .milestone(Milestone.builder().id(request.getMilestoneId()).build())
                 .build();
 
             // Save the progress and return the DTO
@@ -134,21 +130,6 @@ public class ProgressServiceImpl implements ProgressService {
                 .orElseThrow(ProgressNotFoundException::new);
     }
 
-
-
-    /**
-     * Retrieves the progress by its milestone ID.
-     *
-     * @param milestoneId the ID of the milestone
-     * @return ProgressDTO containing the progress details
-     * @throws ProgressNotFoundException if the progress for the given milestone does not exist
-     */
-    @Override
-    public ProgressDTO getProgressByMilestoneId(Long milestoneId) {
-        return Optional.ofNullable(progressRepository.findByMilestoneId(milestoneId))
-                .map(progressMapper::toDTO)
-                .orElseThrow(ProgressNotFoundException::new);
-    }
 
     /**
      * Checks if the progress with the given ID is completed.
