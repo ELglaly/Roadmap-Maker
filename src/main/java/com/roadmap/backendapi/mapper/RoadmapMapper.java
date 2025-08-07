@@ -21,7 +21,6 @@ public interface RoadmapMapper
 {
     RoadmapMapper INSTANCE = Mappers.getMapper(RoadmapMapper.class);
 
-    @Mapping(target = "milestonesDTO" , source = "milestones")
 
     RoadmapDTO toDTO(Roadmap roadmap);
 }
