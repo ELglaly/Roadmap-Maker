@@ -66,7 +66,6 @@ public class UserController {
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
                     .body(new APIResponse("User logged out successfully", null));
     }
-    
 
 @DeleteMapping("/{id}")
 public ResponseEntity<APIResponse> remove(@PathVariable Long id) {
