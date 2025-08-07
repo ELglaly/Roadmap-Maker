@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.service.user;
 
-import com.roadmap.backendapi.Consts;
+import com.roadmap.backendapi.utils.Const;
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.exception.user.*;
@@ -184,11 +184,11 @@ public class UserServiceImpl implements UseService {
                 request.getNewPassword().trim(),
                 request.getConfirmPassword().trim()
         )) {
-            errors.rejectValue("confirmPassword", "password.match", Consts.PasswordErrorMessage.PASSWORD_MISMATCH);
+            errors.rejectValue("confirmPassword", "password.match", Const.PasswordErrorMessages.PASSWORD_MISMATCH);
             throw new PasswordException(errors);
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getUserSecurity().getPasswordHash())) {
-            errors.rejectValue("password", "password.invalid", Consts.PasswordErrorMessage.PASSWORD_INCORRECT);
+            errors.rejectValue("password", "password.invalid", Const.PasswordErrorMessages.PASSWORD_INCORRECT);
             throw new PasswordException(errors);
         }
         passwordValidator.validate(request.getNewPassword(),errors);
