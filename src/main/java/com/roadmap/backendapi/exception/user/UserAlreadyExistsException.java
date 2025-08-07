@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * This exception is used to indicate that the user
  * being created already exists in the system.
  *
- * @see com.roadmap.backendapi.entity.User
+ * @see com.roadmap.backendapi.entity.user.User
+ * * @see com.roadmap.backendapi.service.user.UserService
  */
 @ResponseStatus(HttpStatus.CONFLICT)
 public class UserAlreadyExistsException extends AppException {

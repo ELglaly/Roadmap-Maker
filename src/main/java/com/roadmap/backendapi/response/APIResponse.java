@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.response;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,14 +10,9 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@AllArgsConstructor
 public class    APIResponse {
     // Getters and Setters
     private String message;
     private Object data;
-
-    // Constructor
-    public APIResponse(String message, Object data) {
-        this.message = message;
-        this.data = data;
-    }
 }
