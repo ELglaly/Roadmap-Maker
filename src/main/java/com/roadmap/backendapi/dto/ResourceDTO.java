@@ -1,26 +1,13 @@
 package com.roadmap.backendapi.dto;
 
 import com.roadmap.backendapi.entity.enums.ResourceType;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
 
+import java.io.Serializable;
 
 /**
- * Data Transfer Object (DTO) for Resource.
- * This class is used to transfer data between the application and the client.
- * It contains fields that represent the properties of a Resource.
- *
- * @see ResourceType
- * @see com.roadmap.backendapi.entity.Resource
+ * DTO for {@link com.roadmap.backendapi.entity.Resource}
  */
-
-@Builder
-@EqualsAndHashCode
-@Data
-public class ResourceDTO {
-    private Long id;
-    private String title;
-    private ResourceType type;
-    private String url;
-}
+public record ResourceDTO(@Size(message = "Title cannot exceed 255 characters", max = 255) @NotBlank(message = "Title is required") String title, @NotNull(message = "Resource type is required") ResourceType type, @NotNull @Size(message = "URL too long", max = 2048) @Pattern(message = "Only HTTP/HTTPS URLs are allowed", regexp = "^https?://.*") @NotEmpty @NotBlank(message = "URL is required") @URL(message = "Invalid URL format") String url) implements Serializable {
+  }
