@@ -1,14 +1,11 @@
 package com.roadmap.backendapi.exception;
 
-import com.roadmap.backendapi.response.APIErrorResponse;
+import com.roadmap.backendapi.response.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*
  * Global exception handling for the application.
@@ -28,14 +25,25 @@ public class GlobalExceptionHandling {
      * @return A ResponseEntity containing the error details and HTTP status.
      */
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<List<APIErrorResponse>> handleGlobalException(AppException ex) {
+    public ResponseEntity<List<ErrorResponse>> handleGlobalException(AppException ex) {
 
         if(ex.getErrors() != null && !ex.getErrors().isEmpty()) {
             return new ResponseEntity<>(ex.getErrors(), ex.getStatus());
         } else {
-            APIErrorResponse apiErrorResponse = new APIErrorResponse("error", ex.getMessage());
-            return new ResponseEntity<>(List.of(apiErrorResponse), ex.getStatus());
+            ErrorResponse errorResponse = new ErrorResponse("error", ex.getMessage());
+            return new ResponseEntity<>(List.of(errorResponse), ex.getStatus());
         }
+    }
 
+    /**
+     * Handles all other exceptions and returns a standardized error response.
+     *
+     * @param ex The exception thrown by the application.
+     * @return A ResponseEntity containing the error details and HTTP status.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<List<ErrorResponse>> handleException(Exception ex) {
+        ErrorResponse errorResponse = new ErrorResponse("error", ex.getMessage());
+        return new ResponseEntity<>(List.of(errorResponse), org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
