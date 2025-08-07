@@ -1,5 +1,7 @@
 package com.roadmap.backendapi.entity.user;
 
+import com.roadmap.backendapi.entity.Address;
+import com.roadmap.backendapi.entity.PhoneNumber;
 import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.UserRoles;
 import com.roadmap.backendapi.entity.user.UserContact;
@@ -64,7 +66,8 @@ public class User {
     @Builder.Default
     private List<String> skills = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,orphanRemoval = true,
+            fetch = FetchType.LAZY)
     @Builder.Default
     private List<Roadmap> roadmaps = new ArrayList<>();
 
@@ -78,6 +81,9 @@ public class User {
 
     @Embedded
     private UserContact userContact;
+
+
+
 
 
 }
