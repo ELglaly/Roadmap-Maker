@@ -8,18 +8,18 @@ import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
 
-/**
- * APIResponse class represents a standard response structure for API responses.
- * It contains a message and data object to be returned in the response.
- */
-@Setter
+
+
 @Getter
-@AllArgsConstructor
+@Setter
 @NoArgsConstructor
-public class APIResponse implements Serializable {
+@AllArgsConstructor
+public class ErrorResponse implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
-    private String message;
-    private Object data;
+
+    private String errorField;
+    private String errorMessage;
+
 }
