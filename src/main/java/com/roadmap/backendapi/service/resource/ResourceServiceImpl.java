@@ -148,8 +148,8 @@ public class ResourceServiceImpl implements ResourceService {
     private void validateMilestoneData(Milestone milestone) {
         if ( isNullOrEmpty(milestone.getTitle()) ||
                 isNullOrEmpty(milestone.getDescription()) ||
-                isNullOrEmpty(milestone.getActionableSteps()) ||
-                isNullOrEmpty(milestone.getPrerequisites())){
+                 milestone.getActionableSteps().isEmpty() ||
+                 milestone.getPrerequisites().isEmpty()){
             throw new MilestoneUnexpectedException("Milestone Fields are Empty ");
         }
     }
