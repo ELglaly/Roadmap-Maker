@@ -19,8 +19,7 @@ import org.mapstruct.factory.Mappers;
 public interface MilestoneMapper {
   MilestoneMapper INSTANCE = Mappers.getMapper(MilestoneMapper.class);
 
-  @Mapping(target = "resourcesDTO", source = "resources")
-    @Mapping(target = "progressDTOS", source = "progress")
-  MilestoneDTO toDTO(Milestone milestone);
+
+    MilestoneDTO toDTO(Milestone milestone);
 
 }

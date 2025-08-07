@@ -1,15 +1,9 @@
 
 package com.roadmap.backendapi.request.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roadmap.backendapi.dto.AddressDTO;
 import com.roadmap.backendapi.dto.PhoneNumberDTO;
-import com.roadmap.backendapi.entity.Address;
-import com.roadmap.backendapi.entity.PhoneNumber;
-import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.UserRoles;
-import com.roadmap.backendapi.entity.user.UserContact;
-import com.roadmap.backendapi.entity.user.UserSecurity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -69,8 +63,7 @@ public class UserCreateDTO {
 
     private AddressDTO addressDto;
 
-
-    private PhoneNumberDTO phoneNumberDto;
+    private List<PhoneNumberDTO> phoneNumberDto;
 
 
 

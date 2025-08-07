@@ -2,10 +2,7 @@ package com.roadmap.backendapi.request.user;
 
 import com.roadmap.backendapi.dto.AddressDTO;
 import com.roadmap.backendapi.dto.PhoneNumberDTO;
-import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.UserRoles;
-import com.roadmap.backendapi.entity.user.UserContact;
-import com.roadmap.backendapi.entity.user.UserSecurity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +26,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserUpdateDTO {
+public class UserUpdateDTO implements Serializable {
 
     @NotBlank(message = "First name is required")
     @Size(min = 3, max = 50, message = "First name must be 3-50 characters")
@@ -74,7 +72,7 @@ public class UserUpdateDTO {
     private AddressDTO addressDto;
 
 
-    private PhoneNumberDTO phoneNumberDto;
+    private List<PhoneNumberDTO> phoneNumberDto;
 
 
 }

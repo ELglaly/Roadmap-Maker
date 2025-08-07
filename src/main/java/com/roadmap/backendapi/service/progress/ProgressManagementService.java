@@ -5,8 +5,6 @@ import com.roadmap.backendapi.entity.Progress;
 import com.roadmap.backendapi.request.progress.CreateProgressRequest;
 import com.roadmap.backendapi.request.progress.UpdateProgressRequest;
 
-import java.math.BigDecimal;
-
 public interface ProgressManagementService {
     ProgressDTO updateProgress(UpdateProgressRequest request);
     ProgressDTO createProgress(CreateProgressRequest request);

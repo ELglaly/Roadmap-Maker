@@ -3,7 +3,6 @@ package com.roadmap.backendapi.validator.user;
 import com.roadmap.backendapi.exception.user.EmailAlreadyExistsException;
 import com.roadmap.backendapi.repository.UserRepository;
 import com.roadmap.backendapi.response.ErrorResponse;
-import lombok.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -45,8 +44,8 @@ public class EmailValidator implements Validator {
                 errors.rejectValue("email", "field.invalid", "Invalid email format.");
             }
             else if (!email.isEmpty() && userRepository.existsByUserContactEmail(email)) {
-                ErrorResponse errorResponse = new ErrorResponse("email", "Email already exists");
-                throw new EmailAlreadyExistsException(List.of(errorResponse));
+                ErrorResponse ErrorResponse = new ErrorResponse("email", "Email already exists");
+                throw new EmailAlreadyExistsException(List.of(ErrorResponse));
             }
         }
 

@@ -23,9 +23,8 @@ public interface UserMapper {
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
     @Mapping(source = "userContact.email", target = "email")
-    @Mapping(source = "userContact.phoneNumber", target = "phone")
-    @Mapping(source = "userContact.address", target = "address")
-    @Mapping(target = "id", ignore = true) // ID is generated, not from DTO
+    @Mapping(source = "userContact.phoneNumber", target = "phoneNumberDTO")
+    @Mapping(source = "userContact.address", target = "addressDTO")
     UserDTO toDTO(User user);
 
     @Mapping(source = "email", target = "userContact.email")

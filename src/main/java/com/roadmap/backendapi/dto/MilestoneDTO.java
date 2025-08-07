@@ -1,46 +1,22 @@
 package com.roadmap.backendapi.dto;
-import com.roadmap.backendapi.entity.enums.MilestoneStatus;
-import lombok.*;
 
-import java.sql.Timestamp;
+import com.roadmap.backendapi.entity.enums.MilestoneStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Value;
+
+import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
- * Data Transfer Object (DTO) for Milestone.
- * This class is used to transfer data between the application and the client.
- * It contains fields that represent the properties of a Milestone.
- *
- * @see MilestoneStatus
- * @see com.roadmap.backendapi.entity.Milestone
+ * DTO for {@link com.roadmap.backendapi.entity.Milestone}
  */
-
-
-@Data
-@Builder
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public class MilestoneDTO {
-
-    private Long id;
-
-    private String title;
-
-    private String description;
-
-    private Timestamp dueDate;
-
-    private String actionableSteps;
-
-    private String prerequisites;
-
-    private MilestoneStatus status;
-
-
-    private List<ResourceDTO> resourcesDTO;
-
-    private List<ProgressDTO> progressDTOS;
-
+public record MilestoneDTO(
+        @Size(message = "Title must be 3-100 characters", min = 3, max = 100) @Pattern(message = "Invalid characters in title", regexp = "^[A-Za-z0-9\\s'-]{3,100}$") @NotBlank(message = "Title is required") String title,
+        @Size(message = "Description must be 10-500 characters", min = 10, max = 500) @Pattern(message = "Invalid characters in description", regexp = "^[A-Za-z0-9\\s'.,-]{10,500}$") @NotBlank(message = "Description is required") String description,
+        Date dueDate, List<String> actionableSteps, List<String> prerequisites,
+        @NotNull MilestoneStatus status) implements Serializable {
 }
-
-

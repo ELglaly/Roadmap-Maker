@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Setter
 @Getter
 @Embeddable
@@ -21,9 +23,12 @@ public class UserContact {
     @Column(unique = true, nullable = false, length = 255)
     private String email;
 
+    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.LAZY)
+    private List<PhoneNumber> phoneNumber;
+
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Address address;
 
-    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
-    private PhoneNumber phoneNumber;
+
 }

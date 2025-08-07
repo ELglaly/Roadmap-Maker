@@ -19,7 +19,7 @@ public class PhoneNumberAlreadyExistsException extends AppException {
     public PhoneNumberAlreadyExistsException() {
       super("PHONE_NUMBER_ALREADY_EXISTS",HttpStatus.CONFLICT);
     }
-    public PhoneNumberAlreadyExistsException(List<ErrorResponse> errorResponse) {
-        super(errorResponse, HttpStatus.CONFLICT);
+    public PhoneNumberAlreadyExistsException(List<ErrorResponse> errorRespons) {
+        super(errorRespons, HttpStatus.CONFLICT);
     }
 }

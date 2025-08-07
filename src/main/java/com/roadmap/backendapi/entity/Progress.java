@@ -46,11 +46,6 @@ public class Progress {
     @Column(name = "last_modified_date")
     private Instant lastModifiedDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "milestone_id", nullable = false)
-    @NotNull(message = "Milestone is required")
-    private Milestone milestone;
-
     @CreatedDate
     @Column(name = "created_date")
     private Instant createdDate;
