@@ -1,6 +1,6 @@
 package com.roadmap.backendapi.utils;
 
-import com.roadmap.backendapi.response.APIErrorResponse;
+import com.roadmap.backendapi.response.ErrorResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.Errors;
 
@@ -20,15 +20,15 @@ public class ErrorHandling {
      * @param errors The Errors object containing validation errors.
      * @return A list of ErrorResponse objects representing the error messages.
      */
-    public static List<APIErrorResponse> getAPIErrorResponses(Errors errors) {
-       List<APIErrorResponse> apiErrorResponses  =new ArrayList<>();
+    public static List<ErrorResponse> getAPIErrorResponses(Errors errors) {
+       List<ErrorResponse> errorRespons =new ArrayList<>();
         if (errors.hasErrors()) {
             // Process field errors
             errors.getFieldErrors().forEach(fieldError -> {
-               APIErrorResponse apiErrorResponse = new APIErrorResponse(fieldError.getField(), fieldError.getDefaultMessage());
-                apiErrorResponses.add(apiErrorResponse);
+               ErrorResponse errorResponse = new ErrorResponse(fieldError.getField(), fieldError.getDefaultMessage());
+                errorRespons.add(errorResponse);
             });
         }
-       return apiErrorResponses;
+       return errorRespons;
     }
 }
