@@ -1,5 +1,6 @@
 package com.roadmap.backendapi.entity;
 
+import com.roadmap.backendapi.entity.enums.AddressType;
 import com.roadmap.backendapi.utils.Const;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -26,22 +27,28 @@ public class Address {
     private Long id;
 
     @Column(nullable = false)
-    @NotBlank
+    @NotBlank(message = "Street is required")
     private String street;
 
     @Column(length = 50, nullable = false)
-    @NotBlank
+    @NotBlank(message = "City is required")
     @Pattern(regexp = Const.RegularExpressions.STRING_PATTERN, message = Const.RegularExpressions.STRING_PATTERN_ERROR)
     private String city;
 
     @Column(length = 15, nullable = false)
-    @NotBlank
+    @NotBlank(message = "Zip code is required")
     @Pattern(regexp = Const.RegularExpressions.ZIP_PATTERN, message = Const.RegularExpressions.ZIP_PATTERN_ERROR)
     private String zip;
 
     @Column(length = 50, nullable = false)
-    @NotBlank
+    @NotBlank(message = "Country is required")
     @Pattern(regexp = Const.RegularExpressions.STRING_PATTERN, message = Const.RegularExpressions.STRING_PATTERN_ERROR)
     private String country;
+
+
+    @NotBlank(message = "Address type is required")
+    @Column(length = 50, nullable = true)
+    @Enumerated(EnumType.STRING)
+    private AddressType addressType;
 
 }
