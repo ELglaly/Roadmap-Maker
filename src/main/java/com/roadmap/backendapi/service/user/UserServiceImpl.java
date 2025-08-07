@@ -14,7 +14,6 @@ import com.roadmap.backendapi.security.jwt.JwtService;
 import com.roadmap.backendapi.validator.user.PasswordValidator;
 import com.roadmap.backendapi.validator.user.UserRegistrationValidator;
 import com.roadmap.backendapi.validator.user.UserUpdateValidator;
-import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -40,7 +39,7 @@ import java.util.Optional;
 
 
 @Service
-public class UserService implements UseService {
+public class UserServiceImpl implements UseService {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
@@ -51,9 +50,9 @@ public class UserService implements UseService {
     private final AuthenticationManager authenticationManager;
     private final JwtService JwtService;
 
-    public UserService(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
-                       UserUpdateValidator userUpdateValidator, PasswordEncoder passwordEncoder,
-                       PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService) {
+    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator,
+                           UserUpdateValidator userUpdateValidator, PasswordEncoder passwordEncoder,
+                           PasswordValidator passwordValidator, AuthenticationManager authenticationManager, com.roadmap.backendapi.security.jwt.JwtService jwtService) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.userRegistrationValidator = userRegistrationValidator;
@@ -101,13 +100,13 @@ public class UserService implements UseService {
                 throw new LoginFailedException("Invalid username or password");
             }
         } catch (BadCredentialsException e) {
-            throw new LoginFailedException("Invalid username or password");
+            throw new LoginFailedException("Invalid username or password : " + e.getMessage());
         } catch (UsernameNotFoundException e) {
-            throw new LoginFailedException("User not found");
+            throw new LoginFailedException("User not found : "+ e.getMessage());
         } catch (InternalAuthenticationServiceException e) {
-            throw new AlreadyLoggedInException("User is already logged in");
+            throw new AlreadyLoggedInException("User is already logged in : " + e.getMessage());
         } catch (Exception e) {
-            throw new LoginFailedException("Login failed");
+            throw new LoginFailedException("Login failed :" + e.getMessage());
         }
     }
 
@@ -208,35 +207,39 @@ public class UserService implements UseService {
      * @throws UserValidationException if validation fails
      */
     public User validateUser(Object target) {
-
-        Errors errors;
         if (target == null) {
-            errors = new BeanPropertyBindingResult(new Object(), "user");
+            Errors errors = new BeanPropertyBindingResult(new Object(), "user");
             errors.reject("field.required", "User object is required");
             throw new UserValidationException(errors);
         }
 
-        User user ;
-        if (target instanceof UserCreateDTO registrationRequest) {
-            errors = new BeanPropertyBindingResult(registrationRequest, "registrationRequest");
-            user = userMapper.toEntity(registrationRequest);
-            userRegistrationValidator.validate(user, errors);
-        }
-        else if (target instanceof UserUpdateDTO userUpdateDto) {
-            errors = new BeanPropertyBindingResult(userUpdateDto, "updateUserRequest");
-            user = userMapper.toEntity(userUpdateDto);
-            userUpdateValidator.validate(user, errors);
-        }
-        else {
-            throw new IllegalArgumentException(
+        return switch (target) {
+            case UserCreateDTO registrationRequest -> {
+                Errors errors = new BeanPropertyBindingResult(registrationRequest, "registrationRequest");
+                User user = userMapper.toEntity(registrationRequest);
+                userRegistrationValidator.validate(user, errors);
+
+                if (errors.hasErrors()) {
+                    throw new UserValidationException(errors);
+                }
+                yield user;
+            }
+
+            case UserUpdateDTO userUpdateDto -> {
+                Errors errors = new BeanPropertyBindingResult(userUpdateDto, "updateUserRequest");
+                User user = userMapper.toEntity(userUpdateDto);
+                userUpdateValidator.validate(user, errors);
+
+                if (errors.hasErrors()) {
+                    throw new UserValidationException(errors);
+                }
+                yield user;
+            }
+
+            default -> throw new IllegalArgumentException(
                     "Unsupported target type for validation: " + target.getClass().getName()
             );
-        }
-
-        if (errors.hasErrors()) {
-            throw new UserValidationException(errors);
-        }
-        return user;
+        };
     }
 
 
