@@ -1,6 +1,7 @@
 package com.roadmap.backendapi.entity;
 
-import com.roadmap.backendapi.Consts;
+import com.roadmap.backendapi.entity.enums.AddressType;
+import com.roadmap.backendapi.utils.Const;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -12,7 +13,7 @@ import lombok.*;
  * This class is used to map the Address table in the database.
  * It contains fields that represent the properties of an Address.
  *
- * @see User
+ * @see com.roadmap.backendapi.dto.AddressDTO
  */
 @Entity
 @Builder
@@ -26,22 +27,28 @@ public class Address {
     private Long id;
 
     @Column(nullable = false)
-    @NotBlank
+    @NotBlank(message = "Street is required")
     private String street;
 
     @Column(length = 50, nullable = false)
-    @NotBlank
-    @Pattern(regexp = Consts.RegularExpression.STRING_PATTERN, message = Consts.RegularExpression.STRING_PATTERN_ERROR)
+    @NotBlank(message = "City is required")
+    @Pattern(regexp = Const.RegularExpressions.STRING_PATTERN, message = Const.RegularExpressions.STRING_PATTERN_ERROR)
     private String city;
 
     @Column(length = 15, nullable = false)
-    @NotBlank
-    @Pattern(regexp = Consts.RegularExpression.ZIB_PATTERN, message = Consts.RegularExpression.ZIB_PATTERN_ERROR)
+    @NotBlank(message = "Zip code is required")
+    @Pattern(regexp = Const.RegularExpressions.ZIP_PATTERN, message = Const.RegularExpressions.ZIP_PATTERN_ERROR)
     private String zip;
 
     @Column(length = 50, nullable = false)
-    @NotBlank
-    @Pattern(regexp = Consts.RegularExpression.STRING_PATTERN, message = Consts.RegularExpression.STRING_PATTERN_ERROR)
+    @NotBlank(message = "Country is required")
+    @Pattern(regexp = Const.RegularExpressions.STRING_PATTERN, message = Const.RegularExpressions.STRING_PATTERN_ERROR)
     private String country;
+
+
+    @NotBlank(message = "Address type is required")
+    @Column(length = 50, nullable = true)
+    @Enumerated(EnumType.STRING)
+    private AddressType addressType;
 
 }

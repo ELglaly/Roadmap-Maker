@@ -2,17 +2,24 @@ package com.roadmap.backendapi.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.http.HttpStatus;
 
-/**
- * ErrorResponse class represents a standard error response structure for API errors.
- * It contains a field name and an error message to be returned in the response.
- */
+import java.io.Serial;
+import java.io.Serializable;
+
+
+
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
-public class ErrorResponse {
-    private String fieldName;
-    private String message;
+public class ErrorResponse implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private String errorField;
+    private String errorMessage;
+
 }

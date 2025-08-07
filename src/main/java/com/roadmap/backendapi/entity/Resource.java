@@ -46,8 +46,7 @@ public class Resource {
     @Pattern(regexp = "^https?://.*", message = "Only HTTP/HTTPS URLs are allowed")
     private String url;
 
-    @NotNull(message = "Milestone is required")
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "milestone_id", nullable = false)
     private Milestone milestone;
 }

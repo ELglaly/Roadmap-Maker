@@ -1,29 +1,14 @@
 package com.roadmap.backendapi.dto;
 
-import lombok.*;
+import com.roadmap.backendapi.entity.enums.RoadmapStatus;
+import com.roadmap.backendapi.entity.enums.RoadmapVisibility;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
- * Data Transfer Object (DTO) for Roadmap.
- * This class is used to transfer data between the application and the client.
- * It contains fields that represent the properties of a Roadmap.
- *
- * @see com.roadmap.backendapi.entity.Roadmap
+ * DTO for {@link com.roadmap.backendapi.entity.Roadmap}
  */
-
-@Builder
-@EqualsAndHashCode
-@Data
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class RoadmapDTO {
-
-    private Long id;
-    private String title;
-    private String description;
-    private List<MilestoneDTO> milestonesDTO;
-
-}
+public record RoadmapDTO(@Size(message = "Title must be 3-255 characters", min = 3, max = 255) @NotBlank(message = "Title is required") String title, @Size(message = "Description must be 10-5000 characters", min = 10, max = 5000) @NotBlank(message = "Description is required") String description, RoadmapStatus status, RoadmapVisibility visibility) implements Serializable {
+  }

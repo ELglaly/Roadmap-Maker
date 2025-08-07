@@ -1,8 +1,12 @@
 package com.roadmap.backendapi.response;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.io.Serial;
+import java.io.Serializable;
 
 /**
  * APIResponse class represents a standard response structure for API responses.
@@ -10,14 +14,12 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class    APIResponse {
-    // Getters and Setters
+@AllArgsConstructor
+@NoArgsConstructor
+public class APIResponse implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
     private String message;
     private Object data;
-
-    // Constructor
-    public APIResponse(String message, Object data) {
-        this.message = message;
-        this.data = data;
-    }
 }

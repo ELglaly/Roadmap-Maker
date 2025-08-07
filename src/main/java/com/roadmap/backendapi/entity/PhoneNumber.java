@@ -1,5 +1,7 @@
 package com.roadmap.backendapi.entity;
 
+import com.roadmap.backendapi.entity.enums.PhoneNumberType;
+import com.roadmap.backendapi.entity.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -35,5 +37,15 @@ public class PhoneNumber {
     @Size(min = 4, max = 15, message = "Phone number must be 4-15 digits")
     @Pattern(regexp = "\\d+", message = "Phone number must contain digits only")
     private String number;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotBlank(message = "Phone type is required")
+    private PhoneNumberType phoneType;
+
+
+    @ManyToOne()
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 }
