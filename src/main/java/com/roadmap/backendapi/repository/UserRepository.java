@@ -12,9 +12,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @see org.springframework.data.jpa.repository.JpaRepository
  */
 public interface UserRepository extends JpaRepository<User, Long> {
-    User findByUsername(String username);
-    User findByUserContactEmail(String email);
-    User findByUsernameOrUserContactEmail(String username, String email);
+
+    <T> T findByUserContactEmail(String email, Class<T> type);
+    <T> T findByUsernameOrUserContactEmail(String username, String email, Class<T> type);
     Boolean existsByUsername(String username);
     Boolean existsByUserContactEmail(String email);
+    <T> T findByUsername(String username, Class<T> type);
+    <T> T findById(Long id, Class<T> type);
 }

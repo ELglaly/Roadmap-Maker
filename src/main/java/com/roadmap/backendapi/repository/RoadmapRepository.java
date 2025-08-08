@@ -21,9 +21,7 @@ public interface RoadmapRepository extends JpaRepository<Roadmap, Long> {
     Roadmap findByUser(User user);
     Boolean existsByUserId(Long userId);
 
-    List<Roadmap> findByUserId(Long userId);
+    <T> List<T> findByUserId(Long userId, Class<T> type);
 
-
-    //@Query("SELECT r FROM Roadmap r WHERE r.title LIKE %?1%")
     List<Roadmap> findByTitleContaining(String title);
 }
