@@ -1,11 +1,10 @@
 package com.roadmap.backendapi.service.user;
 
-import com.roadmap.backendapi.utils.Const;
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.exception.user.*;
 import com.roadmap.backendapi.mapper.UserMapper;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.request.user.LoginRequest;
 import com.roadmap.backendapi.request.user.UserCreateDTO;
 import com.roadmap.backendapi.request.user.ChangePasswordRequest;
@@ -21,16 +20,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
 import java.util.Objects;
 import java.util.Optional;
+
 
 /**
  * UserServiceImpl is a service class that implements the UseService interface.
@@ -39,6 +41,7 @@ import java.util.Optional;
 
 
 @Service
+@Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
 public class UserServiceImpl implements UseService {
 
     private final UserMapper userMapper;
@@ -87,26 +90,20 @@ public class UserServiceImpl implements UseService {
     @Override
     public String loginUser(LoginRequest loginRequest) {
         try {
-            // 1. Authenticate user credentials
-            Authentication authentication = authenticationManager.authenticate(
+           authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
                             loginRequest.getPassword())
             );
-            if(authentication.isAuthenticated()){
-                return JwtService.generateToken(loginRequest.getUsername());
-            }
-            else {
-                throw new LoginFailedException("Invalid username or password");
-            }
-        } catch (BadCredentialsException e) {
-            throw new LoginFailedException("Invalid username or password : " + e.getMessage());
-        } catch (UsernameNotFoundException e) {
-            throw new LoginFailedException("User not found : "+ e.getMessage());
+            return JwtService.generateToken(loginRequest.getUsername());
+        }
+        catch (BadCredentialsException | UsernameNotFoundException e) {
+            throw new LoginFailedException("Invalid username or password");
         } catch (InternalAuthenticationServiceException e) {
-            throw new AlreadyLoggedInException("User is already logged in : " + e.getMessage());
-        } catch (Exception e) {
-            throw new LoginFailedException("Login failed :" + e.getMessage());
+            throw new LoginFailedException("Authentication failed. Please try again.");
+        }
+        catch (Exception e) {
+            throw new LoginFailedException("Login failed due to system error");
         }
     }
 
@@ -131,7 +128,7 @@ public class UserServiceImpl implements UseService {
      * @throws UserNotFoundException if the user is not found
      */
     public UserDTO getUserByEmail(String email) {
-        return Optional.ofNullable(userRepository.findByUserContactEmail(email))
+        return Optional.ofNullable(userRepository.findByUserContactEmail(email, User.class))
                 .map(userMapper::toDTO)
                 .orElseThrow(UserNotFoundException::new);
     }
@@ -143,9 +140,9 @@ public class UserServiceImpl implements UseService {
      * @return the UserDTO object representing the user
      * @throws UserNotFoundException if the user is not found
      */
-    @Cacheable(value = "user", key = "#username")
+    @Cacheable(value = "userCache", key = "#username")
     public UserDTO getUserByUsername(String username) {
-        return Optional.ofNullable(userRepository.findByUsername(username))
+        return Optional.ofNullable(userRepository.findByUsername(username, User.class))
                 .map(userMapper::toDTO)
                 .orElseThrow(UserNotFoundException::new);
     }
@@ -158,7 +155,11 @@ public class UserServiceImpl implements UseService {
      * @return the UserDTO object representing the registered user
      * @throws UserValidationException if validation fails
      */
+    @Transactional(propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = {Exception.class})
     @CachePut(value = "userCache", key = "#result.username")
+    @Override
     public UserDTO registerUser(UserCreateDTO userCreateDto)
     {
         User user= validateUser(userCreateDto);
@@ -176,27 +177,48 @@ public class UserServiceImpl implements UseService {
      * @throws PasswordException if password validation fails
      */
     @Override
+    @Transactional(propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = {Exception.class})
     public void changePassword(Long userId, ChangePasswordRequest request) {
+        // Input validation
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("User ID must be positive");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Password change request cannot be null");
+        }
+
+        // Fetch user entity (single database call)
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-        Errors errors = new BeanPropertyBindingResult(request, "newPassword");
-        if (!Objects.equals(
-                request.getNewPassword().trim(),
-                request.getConfirmPassword().trim()
-        )) {
-            errors.rejectValue("confirmPassword", "password.match", Const.PasswordErrorMessages.PASSWORD_MISMATCH);
-            throw new PasswordException(errors);
+
+        // Validate password confirmation match
+        if (!Objects.equals(request.getNewPassword().trim(), request.getConfirmPassword().trim())) {
+            throw new PasswordException("New password and confirmation do not match");
         }
+
+        // Validate current password
         if (!passwordEncoder.matches(request.getPassword(), user.getUserSecurity().getPasswordHash())) {
-            errors.rejectValue("password", "password.invalid", Const.PasswordErrorMessages.PASSWORD_INCORRECT);
-            throw new PasswordException(errors);
+            throw new PasswordException("Current password is incorrect");
         }
-        passwordValidator.validate(request.getNewPassword(),errors);
+
+        // Validate new password strength
+        Errors errors = new BeanPropertyBindingResult(request, "newPassword");
+        passwordValidator.validate(request.getNewPassword(), errors);
         if (errors.hasErrors()) {
             throw new PasswordException(errors);
         }
+
+        // Prevent password reuse (optional security enhancement)
+        if (passwordEncoder.matches(request.getNewPassword(), user.getUserSecurity().getPasswordHash())) {
+            throw new PasswordException("New password cannot be the same as current password");
+        }
+
+        // Update password
         user.getUserSecurity().setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+
     }
 
     /**
@@ -251,6 +273,10 @@ public class UserServiceImpl implements UseService {
      * @return the UserDTO object representing the updated user
      * @throws UserValidationException if validation fails
      */
+    @Transactional(propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = {Exception.class})
+    @Override
     @CacheEvict(value = "userCache", key = "#result.username")
     public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDto) {
         User user= validateUser(userUpdateDto);
@@ -264,6 +290,8 @@ public class UserServiceImpl implements UseService {
      * @param userId the ID of the user to delete
      * @throws UserNotFoundException if the user is not found
      */
+    @Transactional(rollbackFor = {Exception.class})
+    @Override
     @CacheEvict(value = "userCache", key = "#userId")
     public void deleteUser(Long userId) {
        Optional.of(userRepository.existsById(userId))

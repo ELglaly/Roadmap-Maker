@@ -58,7 +58,6 @@ public class MilestoneServiceImpl implements MilestoneService {
         assert milestones != null;
         milestones.forEach(milestone ->
                 {
-                    milestone.setRoadmap(roadmap);
                     resourceService.addResourcesToMilestone(milestone, roadmap);
                 }
         );
@@ -111,7 +110,7 @@ public class MilestoneServiceImpl implements MilestoneService {
                     roadmap.getTitle(), roadmap.getDescription()
             );
         }
-        catch (NullPointerException e)
+        catch ( IllegalArgumentException e)
         {
                 throw new NullPointerException("RoadMap details is Empty");
         }

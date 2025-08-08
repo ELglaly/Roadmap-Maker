@@ -8,6 +8,5 @@ public interface ResourceSearchService {
     ResourceDTO getResourceById(Long resourceId);
     ResourceDTO getResourceByTitle(String title);
     ResourceDTO getResourceByType(String type);
-    ResourceDTO getResourceByUrl(String url);
     List<ResourceDTO> getResourceByMilestoneId(Long milestoneId);
 }
