@@ -3,10 +3,8 @@ package com.roadmap.backendapi.security;
 
 import com.roadmap.backendapi.entity.user.User;
 import com.roadmap.backendapi.exception.user.UserNotFoundException;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -51,7 +49,7 @@ public class UserServiceDetails implements UserDetailsService {
      * @throws UserNotFoundException if the user is not found
      */
     public User getUser(String username) {
-        return  Optional.ofNullable(userRepository.findByUsername(username))
+        return  Optional.ofNullable(userRepository.findByUsername(username, User.class))
                 .orElseThrow(UserNotFoundException::new);
     }
 }

@@ -1,7 +1,7 @@
 package com.roadmap.backendapi.validator.user;
 
 import com.roadmap.backendapi.entity.user.User;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;

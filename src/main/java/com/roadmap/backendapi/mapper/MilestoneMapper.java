@@ -17,8 +17,7 @@ import org.mapstruct.factory.Mappers;
  */
 @Mapper(componentModel = "spring")
 public interface MilestoneMapper {
-  MilestoneMapper INSTANCE = Mappers.getMapper(MilestoneMapper.class);
-
+    MilestoneMapper INSTANCE = Mappers.getMapper(MilestoneMapper.class);
 
     MilestoneDTO toDTO(Milestone milestone);
 
