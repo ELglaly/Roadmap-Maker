@@ -18,7 +18,7 @@ import java.util.List;
  * @see com.roadmap.backendapi.entity.Roadmap
  * @see com.roadmap.backendapi.entity.enums.MilestoneStatus
  */
-@Setter
+
 @Getter
 @Entity
 @Builder
