@@ -89,6 +89,7 @@ public class JwtService {
      * It uses the HmacSHA256 algorithm to generate a key from the secretKey string.
      * @return The SecretKey object used for signing the JWT.
      */
+   // @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
