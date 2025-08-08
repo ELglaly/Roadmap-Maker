@@ -10,5 +10,7 @@ import java.time.LocalDateTime;
 /**
  * DTO for {@link com.roadmap.backendapi.entity.Progress}
  */
-public record ProgressDTO(@NotNull(message = "Progress percentage is required") BigDecimal progressPercentage, @PastOrPresent(message = "Completion date cannot be in the future") LocalDateTime completedAt) implements Serializable {
+public record ProgressDTO(@NotNull(message = "Progress percentage is required") BigDecimal progressPercentage,
+                          @PastOrPresent(message = "Completion date cannot be in the future") LocalDateTime completedAt)
+        implements Serializable {
   }
