@@ -1,7 +1,8 @@
-package com.roadmap.backendapi.repository;
+package com.roadmap.backendapi.repository.user;
 
 import com.roadmap.backendapi.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Repository interface for managing User entities.
@@ -19,4 +20,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByUserContactEmail(String email);
     <T> T findByUsername(String username, Class<T> type);
     <T> T findById(Long id, Class<T> type);
+
 }

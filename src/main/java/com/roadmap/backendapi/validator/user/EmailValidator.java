@@ -1,7 +1,7 @@
 package com.roadmap.backendapi.validator.user;
 
 import com.roadmap.backendapi.exception.user.EmailAlreadyExistsException;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.response.ErrorResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;

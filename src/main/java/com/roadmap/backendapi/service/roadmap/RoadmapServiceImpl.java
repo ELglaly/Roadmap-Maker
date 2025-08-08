@@ -11,15 +11,13 @@ import com.roadmap.backendapi.exception.user.UserNotFoundException;
 import com.roadmap.backendapi.mapper.RoadmapMapper;
 import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.repository.RoadmapRepository;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.request.roadmap.UpdateRoadmapRequest;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * RoadmapServiceImpl is a service class that implements the RoadmapService interface.
@@ -72,17 +70,7 @@ public class RoadmapServiceImpl implements RoadmapService {
         if (generatedRoadmap == null) {
             throw new RoadmapNullException();
         }
-        
-        if (generatedRoadmap.getMilestones() != null) {
-            for (Milestone milestone : generatedRoadmap.getMilestones()) {
-                milestone.setRoadmap(generatedRoadmap);
-                if (milestone.getResources() != null) {
-                    for (Resource resource : milestone.getResources()) {
-                        resource.setMilestone(milestone);
-                    }
-                }
-            }
-        }
+
         generatedRoadmap.setUser(user);
 
         // Save the generated roadmap with associated milestones
@@ -237,9 +225,8 @@ public class RoadmapServiceImpl implements RoadmapService {
      */
     @Override
     public List<RoadmapDTO> getRoadmapByUserId(Long userId) {
-        return roadmapRepository.findByUserId(userId)
-                .stream().map(roadMapMapper::toDTO)
-                .toList();
+        //TODO : Check if its okay to return a list of roadmaps as DTOs
+        return roadmapRepository.findByUserId(userId, RoadmapDTO.class);
     }
 
     /**

@@ -21,7 +21,7 @@ import java.util.Map;
 @Component
 public class RoadmapWebSocketHandler extends TextWebSocketHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(RoadmapWebSocketHandler.class);
+    public static final Logger logger = LoggerFactory.getLogger(RoadmapWebSocketHandler.class);
     private final Map<String, WebSocketSession> sessions = new HashMap<>();
 
     @Override
