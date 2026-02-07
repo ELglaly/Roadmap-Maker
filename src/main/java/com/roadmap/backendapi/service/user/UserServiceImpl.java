@@ -35,14 +35,14 @@ import java.util.Optional;
 
 
 /**
- * UserServiceImpl is a service class that implements the UseService interface.
+ * UserServiceImpl is a service class that implements the UserService interface.
  * It provides methods for managing user accounts, including registration, login, logout, and user information retrieval.
  */
 
 
 @Service
 @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
-public class UserServiceImpl implements UseService {
+public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
@@ -74,6 +74,7 @@ public class UserServiceImpl implements UseService {
      * @throws UserNotFoundException if the user is not found
      */
     @Override
+    @Cacheable(value = "userCache", key = "#userId")
     public UserDTO getUserById(Long userId) {
         User user =userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
@@ -88,6 +89,9 @@ public class UserServiceImpl implements UseService {
      * @throws LoginFailedException if login fails due to invalid credentials
      */
     @Override
+    @Transactional(propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = {Exception.class})
     public String loginUser(LoginRequest loginRequest) {
         try {
            authenticationManager.authenticate(
@@ -113,6 +117,7 @@ public class UserServiceImpl implements UseService {
      * @param token the JWT token to be removed
      * @throws AlreadyLoggedOutException if the user is already logged out
      */
+
     @Override
     public void logoutUser(String token) {
         JwtService.blacklistToken(token);
@@ -127,6 +132,8 @@ public class UserServiceImpl implements UseService {
      * @return the UserDTO object representing the user
      * @throws UserNotFoundException if the user is not found
      */
+    @Cacheable(value = "userCache", key = "#email")
+    @Override
     public UserDTO getUserByEmail(String email) {
         return Optional.ofNullable(userRepository.findByUserContactEmail(email, User.class))
                 .map(userMapper::toDTO)
@@ -141,6 +148,7 @@ public class UserServiceImpl implements UseService {
      * @throws UserNotFoundException if the user is not found
      */
     @Cacheable(value = "userCache", key = "#username")
+    @Override
     public UserDTO getUserByUsername(String username) {
         return Optional.ofNullable(userRepository.findByUsername(username, User.class))
                 .map(userMapper::toDTO)
@@ -292,7 +300,6 @@ public class UserServiceImpl implements UseService {
      */
     @Transactional(rollbackFor = {Exception.class})
     @Override
-    @CacheEvict(value = "userCache", key = "#userId")
     public void deleteUser(Long userId) {
        Optional.of(userRepository.existsById(userId))
                 .filter(Boolean::booleanValue)

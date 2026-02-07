@@ -82,8 +82,6 @@ public class User {
     @Embedded
     private UserContact userContact;
 
-
-
-
-
 }
+
+

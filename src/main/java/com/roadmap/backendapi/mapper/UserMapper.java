@@ -28,12 +28,8 @@ public interface UserMapper {
     UserDTO toDTO(User user);
 
     @Mapping(source = "email", target = "userContact.email")
-    @Mapping(source = "phoneNumberDto", target = "userContact.phoneNumber")
-    @Mapping(source = "addressDto", target = "userContact.address")
     @Mapping(source = "passwordHash", target = "userSecurity.passwordHash")
     @Mapping(target = "id", ignore = true) // ID is generated, not from DTO
-    @Mapping(target = "roadmaps", ignore = true) // Roadmaps are managed separately
-    @Mapping(target = "role", constant = "USER") // Default role
     User toEntity(UserCreateDTO userCreateDto);
 
     @Mapping(target = "id", ignore = true) // ID is generated, not from DTO
