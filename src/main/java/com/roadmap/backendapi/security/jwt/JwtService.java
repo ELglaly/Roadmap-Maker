@@ -11,9 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
@@ -34,7 +32,7 @@ public class JwtService {
  //   private final RedisTemplate<String, Date> redisTemplate;
 
 
-    private final String secretKey;
+    private final SecretKey secretKey;
 
     @Value("${jwt.expiration.ms}")
     private long expirationMs;
@@ -43,15 +41,22 @@ public class JwtService {
     private long logoutTimeMs;
 
 
-    public JwtService() {
-    //    this.redisTemplate = redisTemplate;
-        try {
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey sk = keyGenerator.generateKey();
-            secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
+    public JwtService(@Value("${jwt.secret}") String secretKeyString) {
+        // Validate that JWT secret key is configured
+        if (secretKeyString == null || secretKeyString.isBlank()) {
+            throw new IllegalStateException(
+                "JWT secret key must be configured in JWT_SECRET_KEY environment variable"
+            );
+        }
 
-        } catch (NoSuchAlgorithmException e) {
-            throw new TokenGenerationException("Failed to generate secret key" +e.getMessage());
+        // Decode base64-encoded secret key
+        try {
+            byte[] decodedKey = Base64.getDecoder().decode(secretKeyString);
+            this.secretKey = Keys.hmacShaKeyFor(decodedKey);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                "JWT secret key must be a valid base64-encoded string", e
+            );
         }
     }
 
@@ -86,12 +91,10 @@ public class JwtService {
 
     /**
      * This method retrieves the secret key used for signing the JWT.
-     * It uses the HmacSHA256 algorithm to generate a key from the secretKey string.
      * @return The SecretKey object used for signing the JWT.
      */
-   // @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        return secretKey;
     }
 
     /**

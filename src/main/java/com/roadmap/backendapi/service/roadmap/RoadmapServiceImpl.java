@@ -14,7 +14,11 @@ import com.roadmap.backendapi.repository.RoadmapRepository;
 import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.request.roadmap.UpdateRoadmapRequest;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
@@ -24,6 +28,7 @@ import java.util.List;
  * It provides methods for managing and searching roadmaps.
  */
 @Service
+@Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
 public class RoadmapServiceImpl implements RoadmapService {
 
     private final RoadmapRepository roadmapRepository;
@@ -50,12 +55,18 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @throws ConnectionErrorException if there's an error connecting to the AI service
      * @throws RoadmapNullException if the generated roadmap is null
      */
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW
+            ,label = {"roadmap Service", "roadmap generation"},
+            rollbackFor = {UserNotFoundException.class, UserDataRequiredException.class, ConnectionErrorException.class, RoadmapNullException.class})
+    @Override
+    @CacheEvict(value = "roadmaps", allEntries = true,key = "(#userId)")
     public RoadmapDTO generateRoadmap(Long userId) {
-        // Step 1: Fetch the user
+        // fetch the user
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        // Step 2: Generate the roadmap prompt
+        // generate the roadmap prompt
         String roadmapPrompt = getCompleteRoadmapPrompt(user);
 
         // Generate the roadmap using the chat client
@@ -66,15 +77,15 @@ public class RoadmapServiceImpl implements RoadmapService {
             throw new ConnectionErrorException();
         }
 
-        // Ensure the generated roadmap is not null
+        // ensure the generated roadmap is not null
         if (generatedRoadmap == null) {
             throw new RoadmapNullException();
         }
 
         generatedRoadmap.setUser(user);
 
-        // Save the generated roadmap with associated milestones
-        generatedRoadmap = roadmapRepository.save(generatedRoadmap);
+        // generated roadmap with associated milestones
+      //  generatedRoadmap = roadmapRepository.save(generatedRoadmap);
 
         return roadMapMapper.toDTO(generatedRoadmap);
     }
@@ -160,8 +171,13 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
+    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#request.userId)")
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW,
+            label = {"roadmap Service", "roadmap update"},
+            rollbackFor = {RoadMapNotFoundException.class, RoadmapNullException.class})
     public RoadmapDTO updateRoadmap(UpdateRoadmapRequest request) {
-        // First check if the roadmap exists
+        // check if the roadmap exists
         Long roadmapId = request.getRoadmapId();
         if (roadmapId == null) {
             // If no roadmap ID is provided, generate a new roadmap
@@ -195,6 +211,10 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW,
+            label = {"roadmap Service", "roadmap delete"},
+            rollbackFor = {RoadMapNotFoundException.class})
     public void deleteRoadmap(Long roadmapId) {
         if(roadmapRepository.existsById(roadmapId))
             roadmapRepository.deleteById(roadmapId);
@@ -209,7 +229,13 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @return the retrieved roadmap as a RoadmapDTO
      * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
+
     @Override
+    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#roadmapId)")
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW,
+            label = {"roadmap Service", "roadmap retrieval"},
+            rollbackFor = {RoadMapNotFoundException.class})
     public RoadmapDTO getRoadmapById(Long roadmapId) {
         return roadmapRepository.findById(roadmapId)
                 .map(roadMapMapper::toDTO)
@@ -224,6 +250,11 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @return a list of roadmaps associated with the user
      */
     @Override
+    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#userId)")
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW,
+            label = {"roadmap Service", "roadmap retrieval by user"},
+            rollbackFor = {UserNotFoundException.class, RoadMapNotFoundException.class})
     public List<RoadmapDTO> getRoadmapByUserId(Long userId) {
         //TODO : Check if its okay to return a list of roadmaps as DTOs
         return roadmapRepository.findByUserId(userId, RoadmapDTO.class);
@@ -236,6 +267,11 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @return a list of roadmaps matching the title
      */
     @Override
+    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#title)")
+    @Transactional(isolation = Isolation.READ_COMMITTED,
+            propagation = Propagation.REQUIRES_NEW,
+            label = {"roadmap Service", "roadmap retrieval by title"},
+            rollbackFor = {RoadMapNotFoundException.class})
     public List<RoadmapDTO> getRoadmapByTitle(String title) {
         return roadmapRepository.findByTitleContaining(title).stream()
                 .map(roadMapMapper::toDTO).toList();

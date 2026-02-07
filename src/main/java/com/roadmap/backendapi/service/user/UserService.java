@@ -14,5 +14,5 @@ package com.roadmap.backendapi.service.user;
  * </p>
  */
 
-public interface UseService extends UserManagementService, UserSearchService, AuthService {
+public interface UserService extends UserManagementService, UserSearchService, AuthService {
 }
