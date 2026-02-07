@@ -28,6 +28,16 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
+@Table(
+    name = "roadmap",
+    indexes = {
+        @Index(name = "idx_roadmap_user_id", columnList = "user_id"),
+        @Index(name = "idx_roadmap_status", columnList = "status"),
+        @Index(name = "idx_roadmap_visibility", columnList = "visibility"),
+        @Index(name = "idx_roadmap_created_date", columnList = "createdDate DESC"),
+        @Index(name = "idx_roadmap_user_status", columnList = "user_id, status")
+    }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

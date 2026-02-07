@@ -20,6 +20,14 @@ import java.math.BigDecimal;
  * @see com.roadmap.backendapi.entity.Milestone
  */
 @Entity
+@Table(
+    name = "progress",
+    indexes = {
+        @Index(name = "idx_progress_user_id", columnList = "user_id"),
+        @Index(name = "idx_progress_milestone_id", columnList = "milestone_id"),
+        @Index(name = "idx_progress_completed_at", columnList = "completedAt DESC")
+    }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

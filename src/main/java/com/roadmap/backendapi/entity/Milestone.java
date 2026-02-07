@@ -21,6 +21,15 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
+@Table(
+    name = "milestone",
+    indexes = {
+        @Index(name = "idx_milestone_roadmap_id", columnList = "roadmap_id"),
+        @Index(name = "idx_milestone_status", columnList = "status"),
+        @Index(name = "idx_milestone_due_date", columnList = "dueDate"),
+        @Index(name = "idx_milestone_roadmap_status", columnList = "roadmap_id, status")
+    }
+)
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

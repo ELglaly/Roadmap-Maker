@@ -20,6 +20,14 @@ import org.hibernate.validator.constraints.URL;
  */
 
 @Entity
+@Table(
+    name = "resource",
+    indexes = {
+        @Index(name = "idx_resource_milestone_id", columnList = "milestone_id"),
+        @Index(name = "idx_resource_type", columnList = "type"),
+        @Index(name = "idx_resource_milestone_type", columnList = "milestone_id, type")
+    }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
