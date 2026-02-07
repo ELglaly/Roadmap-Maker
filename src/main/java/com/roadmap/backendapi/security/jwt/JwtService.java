@@ -11,9 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
@@ -30,11 +28,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class JwtService {
-    // If using Redis or another distributed cache:
- //   private final RedisTemplate<String, Date> redisTemplate;
-
-
-    private final String secretKey;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final SecretKey secretKey;
 
     @Value("${jwt.expiration.ms}")
     private long expirationMs;
@@ -43,15 +38,24 @@ public class JwtService {
     private long logoutTimeMs;
 
 
-    public JwtService() {
-    //    this.redisTemplate = redisTemplate;
-        try {
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey sk = keyGenerator.generateKey();
-            secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
+    public JwtService(@Value("${jwt.secret}") String secretKeyString,
+                      RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+        // Validate that JWT secret key is configured
+        if (secretKeyString == null || secretKeyString.isBlank()) {
+            throw new IllegalStateException(
+                "JWT secret key must be configured in JWT_SECRET_KEY environment variable"
+            );
+        }
 
-        } catch (NoSuchAlgorithmException e) {
-            throw new TokenGenerationException("Failed to generate secret key" +e.getMessage());
+        // Decode base64-encoded secret key
+        try {
+            byte[] decodedKey = Base64.getDecoder().decode(secretKeyString);
+            this.secretKey = Keys.hmacShaKeyFor(decodedKey);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                "JWT secret key must be a valid base64-encoded string", e
+            );
         }
     }
 
@@ -86,12 +90,10 @@ public class JwtService {
 
     /**
      * This method retrieves the secret key used for signing the JWT.
-     * It uses the HmacSHA256 algorithm to generate a key from the secretKey string.
      * @return The SecretKey object used for signing the JWT.
      */
-   // @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        return secretKey;
     }
 
     /**
@@ -146,21 +148,68 @@ public class JwtService {
     }
 
 
+    /**
+     * Checks if a token is blacklisted.
+     *
+     * @param token The JWT token to check
+     * @return true if the token is blacklisted, false otherwise
+     */
     public boolean isTokenBlacklisted(String token) {
         if (token == null || token.trim().isEmpty()) {
             return false;
         }
-        //TODO
-       // long expirationTime = Objects.requireNonNull(redisTemplate.opsForValue().get(token)).getTime();
-        return false;
+
+        try {
+            String blacklistKey = "blacklist:" + token;
+            return Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey));
+        } catch (Exception e) {
+            // If Redis is unavailable, log error and allow the token
+            // (fail open - security vs availability trade-off)
+            return false;
+        }
     }
 
+    /**
+     * Blacklists a token by storing it in Redis with TTL.
+     * The TTL is set to the token's remaining validity period.
+     *
+     * @param token The JWT token to blacklist
+     * @throws SecurityException if the token is null, empty, or already blacklisted
+     */
     public void blacklistToken(String token) {
         if (token == null || token.trim().isEmpty()) {
             throw new SecurityException("Token cannot be null or empty");
         }
-        else if (isTokenBlacklisted(token)) {
+
+        if (isTokenBlacklisted(token)) {
             throw new SecurityException("Token is already blacklisted");
+        }
+
+        try {
+            // Get the token's expiration time
+            Claims claims = parseClaims(token);
+            Date expiration = claims.getExpiration();
+
+            // Calculate TTL (time until token expires)
+            long now = System.currentTimeMillis();
+            long expirationTime = expiration.getTime();
+            long ttl = expirationTime - now;
+
+            // Only blacklist if the token hasn't expired yet
+            if (ttl > 0) {
+                String blacklistKey = "blacklist:" + token;
+                String username = claims.getSubject();
+
+                // Store in Redis with TTL
+                redisTemplate.opsForValue().set(
+                    blacklistKey,
+                    username,
+                    ttl,
+                    TimeUnit.MILLISECONDS
+                );
+            }
+        } catch (JwtException e) {
+            throw new SecurityException("Invalid token - cannot blacklist", e);
         }
     }
 

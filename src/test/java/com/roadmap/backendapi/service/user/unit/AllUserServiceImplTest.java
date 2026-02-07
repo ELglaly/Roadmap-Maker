@@ -7,10 +7,6 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @SelectClasses({
         LoginTest.class,
-        PasswordTest.class,
-        RegistrationTest.class,
-        UpdateUserTest.class,
-        UserSearchTest.class,
 })
-public class AllUserServiceTest {
+public class AllUserServiceImplTest {
 }

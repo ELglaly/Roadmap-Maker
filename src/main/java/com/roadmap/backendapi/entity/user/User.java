@@ -24,6 +24,14 @@ import java.util.List;
  * @see com.roadmap.backendapi.entity.Roadmap
  */
 @Entity
+@Table(
+    name = "user",
+    indexes = {
+        @Index(name = "idx_user_username", columnList = "username", unique = true),
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_role", columnList = "role")
+    }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -82,8 +90,6 @@ public class User {
     @Embedded
     private UserContact userContact;
 
-
-
-
-
 }
+
+

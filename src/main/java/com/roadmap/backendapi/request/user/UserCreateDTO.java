@@ -6,15 +6,13 @@ import com.roadmap.backendapi.dto.PhoneNumberDTO;
 import com.roadmap.backendapi.entity.enums.UserRoles;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,20 +33,6 @@ public class UserCreateDTO {
     @Pattern(regexp = "^[a-zA-Z0-9._-]{3,30}$", message = "Username contains invalid characters")
     private String username;
 
-    @NotBlank(message = "Goal is required")
-    @Size(min = 5, max = 2000, message = "Goal must be 5-2000 characters")
-    private String goal;
-
-    @Builder.Default
-    private List<String> interests =new ArrayList<>();
-
-    @Builder.Default
-    private List<String> skills = new ArrayList<>();
-
-
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private UserRoles role = UserRoles.USER;
 
     @Size(min = 8, max = 128, message = "Password must be 8-128 characters")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
@@ -59,12 +43,5 @@ public class UserCreateDTO {
     @Email(message = "Invalid email format")
     @Size(max = 255, message = "Email too long")
     private String email;
-
-
-    private AddressDTO addressDto;
-
-    private List<PhoneNumberDTO> phoneNumberDto;
-
-
 
 }

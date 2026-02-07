@@ -2,10 +2,10 @@ package com.roadmap.backendapi.service.user.unit;
 import com.roadmap.backendapi.exception.user.AlreadyLoggedInException;
 import com.roadmap.backendapi.exception.user.LoginFailedException;
 import com.roadmap.backendapi.mapper.UserMapper;
-import com.roadmap.backendapi.repository.UserRepository;
+import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.request.user.LoginRequest;
 import com.roadmap.backendapi.security.jwt.JwtService;
-import com.roadmap.backendapi.service.user.UserService;
+import com.roadmap.backendapi.service.user.UserServiceImpl;
 import com.roadmap.backendapi.validator.user.PasswordValidator;
 import com.roadmap.backendapi.validator.user.UserRegistrationValidator;
 import com.roadmap.backendapi.validator.user.UserUpdateValidator;
@@ -62,7 +62,7 @@ public class LoginTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     LoginRequest loginRequest;
     @BeforeEach
@@ -83,7 +83,7 @@ public class LoginTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new InternalAuthenticationServiceException("User is already logged in"));
 
-        assertThrows(AlreadyLoggedInException.class, () -> userService.loginUser(loginRequest));
+        assertThrows(AlreadyLoggedInException.class, () -> userServiceImpl.loginUser(loginRequest));
     }
 
     /**
@@ -101,7 +101,7 @@ public class LoginTest {
 
         // Act & Assert
         assertThrows(LoginFailedException.class, () -> {
-            userService.loginUser(loginRequest);
+            userServiceImpl.loginUser(loginRequest);
         });
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
@@ -118,7 +118,7 @@ public class LoginTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid username or password"));
 
-        assertThrows(LoginFailedException.class, () -> userService.loginUser(loginRequest));
+        assertThrows(LoginFailedException.class, () -> userServiceImpl.loginUser(loginRequest));
     }
 
     /**
@@ -132,7 +132,7 @@ public class LoginTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         LoginFailedException exception= assertThrows(LoginFailedException.class, ()
-                -> userService.loginUser(loginRequest));
+                -> userServiceImpl.loginUser(loginRequest));
 
         assertEquals("Login failed: java.lang.RuntimeException: Unexpected error", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
@@ -153,7 +153,7 @@ public class LoginTest {
                 .thenThrow(new UsernameNotFoundException("User not found"));
 
         LoginFailedException exception = assertThrows(LoginFailedException.class, ()
-                -> userService.loginUser(loginRequest));
+                -> userServiceImpl.loginUser(loginRequest));
 
         assertEquals("User not found", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
@@ -181,7 +181,7 @@ public class LoginTest {
         when(jwtService.generateToken(loginRequest.getUsername())).thenReturn(expectedToken);
 
         // Act
-        String result = userService.loginUser(loginRequest);
+        String result = userServiceImpl.loginUser(loginRequest);
 
         // Assert
         assertEquals(expectedToken, result);
@@ -203,7 +203,7 @@ public class LoginTest {
         String nullToken = null;
 
         // Act
-        userService.logoutUser(nullToken);
+        userServiceImpl.logoutUser(nullToken);
 
         // Assert
         assertNull(SecurityContextHolder.getContext().getAuthentication());
