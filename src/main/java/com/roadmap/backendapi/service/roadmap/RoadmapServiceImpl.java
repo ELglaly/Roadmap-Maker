@@ -15,6 +15,10 @@ import com.roadmap.backendapi.repository.user.UserRepository;
 import com.roadmap.backendapi.request.roadmap.UpdateRoadmapRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -60,7 +64,7 @@ public class RoadmapServiceImpl implements RoadmapService {
             ,label = {"roadmap Service", "roadmap generation"},
             rollbackFor = {UserNotFoundException.class, UserDataRequiredException.class, ConnectionErrorException.class, RoadmapNullException.class})
     @Override
-    @CacheEvict(value = "roadmaps", allEntries = true,key = "(#userId)")
+    @CacheEvict(value = "roadmaps", key = "#userId")
     public RoadmapDTO generateRoadmap(Long userId) {
         // fetch the user
         User user = userRepository.findById(userId)
@@ -171,7 +175,7 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
-    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#request.userId)")
+    @CachePut(value = "roadmaps", key = "#result.id", unless = "#result == null")
     @Transactional(isolation = Isolation.READ_COMMITTED,
             propagation = Propagation.REQUIRES_NEW,
             label = {"roadmap Service", "roadmap update"},
@@ -211,6 +215,7 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @throws RoadMapNotFoundException if the roadmap with the given ID is not found
      */
     @Override
+    @CacheEvict(value = {"roadmaps", "roadmapsByUser", "roadmapsByTitle"}, allEntries = true)
     @Transactional(isolation = Isolation.READ_COMMITTED,
             propagation = Propagation.REQUIRES_NEW,
             label = {"roadmap Service", "roadmap delete"},
@@ -231,11 +236,8 @@ public class RoadmapServiceImpl implements RoadmapService {
      */
 
     @Override
-    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#roadmapId)")
-    @Transactional(isolation = Isolation.READ_COMMITTED,
-            propagation = Propagation.REQUIRES_NEW,
-            label = {"roadmap Service", "roadmap retrieval"},
-            rollbackFor = {RoadMapNotFoundException.class})
+    @Cacheable(value = "roadmaps", key = "#roadmapId", unless = "#result == null")
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public RoadmapDTO getRoadmapById(Long roadmapId) {
         return roadmapRepository.findById(roadmapId)
                 .map(roadMapMapper::toDTO)
@@ -250,11 +252,8 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @return a list of roadmaps associated with the user
      */
     @Override
-    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#userId)")
-    @Transactional(isolation = Isolation.READ_COMMITTED,
-            propagation = Propagation.REQUIRES_NEW,
-            label = {"roadmap Service", "roadmap retrieval by user"},
-            rollbackFor = {UserNotFoundException.class, RoadMapNotFoundException.class})
+    @Cacheable(value = "roadmapsByUser", key = "#userId", unless = "#result == null or #result.isEmpty()")
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public List<RoadmapDTO> getRoadmapByUserId(Long userId) {
         //TODO : Check if its okay to return a list of roadmaps as DTOs
         return roadmapRepository.findByUserId(userId, RoadmapDTO.class);
@@ -267,13 +266,51 @@ public class RoadmapServiceImpl implements RoadmapService {
      * @return a list of roadmaps matching the title
      */
     @Override
-    @CacheEvict(value = "roadmaps", allEntries = true, key = "(#title)")
-    @Transactional(isolation = Isolation.READ_COMMITTED,
-            propagation = Propagation.REQUIRES_NEW,
-            label = {"roadmap Service", "roadmap retrieval by title"},
-            rollbackFor = {RoadMapNotFoundException.class})
+    @Cacheable(value = "roadmapsByTitle", key = "#title", unless = "#result == null or #result.isEmpty()")
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public List<RoadmapDTO> getRoadmapByTitle(String title) {
         return roadmapRepository.findByTitleContaining(title).stream()
                 .map(roadMapMapper::toDTO).toList();
+    }
+
+    /**
+     * Retrieves a paginated list of roadmaps by user ID.
+     *
+     * @param userId the ID of the user whose roadmaps to retrieve
+     * @param pageable pagination information (page, size, sort)
+     * @return a page of roadmaps associated with the user
+     */
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    public Page<RoadmapDTO> getRoadmapByUserId(Long userId, Pageable pageable) {
+        return roadmapRepository.findByUserId(userId, pageable)
+                .map(roadMapMapper::toDTO);
+    }
+
+    /**
+     * Retrieves a paginated list of roadmaps by title.
+     *
+     * @param title the title to search for (partial match)
+     * @param pageable pagination information (page, size, sort)
+     * @return a page of roadmaps matching the title
+     */
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    public Page<RoadmapDTO> getRoadmapByTitle(String title, Pageable pageable) {
+        return roadmapRepository.findByTitleContaining(title, pageable)
+                .map(roadMapMapper::toDTO);
+    }
+
+    /**
+     * Retrieves all roadmaps with pagination.
+     *
+     * @param pageable pagination information (page, size, sort)
+     * @return a page of all roadmaps
+     */
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    public Page<RoadmapDTO> getAllRoadmaps(Pageable pageable) {
+        return roadmapRepository.findAll(pageable)
+                .map(roadMapMapper::toDTO);
     }
 }

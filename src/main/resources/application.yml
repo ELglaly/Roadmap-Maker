@@ -1,6 +1,274 @@
+# ============================================
+# Spring Boot Application Configuration
+# ============================================
+spring:
+  application:
+    name: backendapi
 
-services:
-  redis:
-    image: redis:7.4.2
-    ports:
-      - "6379:6379"
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # ============================================
+  # Database Configuration
+  # ============================================
+  datasource:
+    url: jdbc:mysql://localhost:3306/roadmapmaker
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # Liquibase manages schema, Hibernate only validates
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # ============================================
+  # Database Migration - Liquibase
+  # ============================================
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  # ============================================
+  # Redis Cache Configuration
+  # ============================================
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+  cache:
+    type: redis
+
+  # ============================================
+  # AI Configuration (Spring AI)
+  # ============================================
+  ai:
+    openai:
+      api-key: ${SPRING_AI_GEMINI_API_KEY}
+      chat:
+        base-url: https://generativelanguage.googleapis.com
+        completions-path: /v1beta/openai/chat/completions
+        options:
+          model: gemini-2.0-flash
+          temperature: 0.7
+          max-tokens: 4096
+
+# ============================================
+# JWT Configuration
+# ============================================
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration:
+    ms: 3600000  # 1 hour
+  logout-time:
+    ms: 300000   # 5 minutes
+
+# ============================================
+# Actuator & Monitoring
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,caches,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ============================================
+# Logging Configuration
+# ============================================
+logging:
+  level:
+    root: INFO
+    com.roadmap.backendapi: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+---
+# ============================================
+# DEVELOPMENT PROFILE
+# ============================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Redis for local development
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # AI provider settings for development
+  ai:
+    openai:
+      chat:
+        options:
+          temperature: 0.8  # More creative in dev
+
+# Detailed logging in development
+logging:
+  level:
+    root: DEBUG
+    com.roadmap.backendapi: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+---
+# ============================================
+# TEST PROFILE
+# ============================================
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  # H2 in-memory database for testing
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  # Disable Liquibase for tests (use Hibernate auto-DDL)
+  liquibase:
+    enabled: false
+
+  # Use mock Redis or embedded Redis for tests
+  data:
+    redis:
+      host: localhost
+      port: 6370  # Different port for test Redis
+
+  # Mock AI responses in tests
+  ai:
+    openai:
+      api-key: test-api-key
+
+jwt:
+  secret: ${JWT-SECRET-KEY}
+  expiration:
+    ms: 300000  # 5 minutes for faster tests
+
+logging:
+  level:
+    root: WARN
+    com.roadmap.backendapi: DEBUG
+
+---
+# ============================================
+# PRODUCTION PROFILE
+# ============================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # Production database settings
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://prod-db-host:3306/roadmapmaker}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Production Redis settings
+  data:
+    redis:
+      host: ${REDIS_HOST:prod-redis-host}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000ms
+      jedis:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+  # Production AI settings
+  ai:
+    openai:
+      api-key: ${SPRING_AI_GEMINI_API_KEY}
+      chat:
+        options:
+          temperature: 0.7  # Balanced creativity in production
+          max-tokens: 8192
+
+# Conservative JWT expiration in production
+jwt:
+  expiration:
+    ms: 7200000  # 2 hours
+
+# Production logging (structured for log aggregation)
+logging:
+  level:
+    root: WARN
+    com.roadmap.backendapi: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Production monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never  # Hide details in production
+  metrics:
+    export:
+      prometheus:
+        enabled: true
