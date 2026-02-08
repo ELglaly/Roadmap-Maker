@@ -16,6 +16,10 @@ import java.time.Duration;
  * This class is responsible for creating a RedisCacheManager bean with a default cache configuration.
  * The default cache configuration includes a time-to-live (TTL) of 60 minutes and serialization settings.
  *
+ * Caches using this configuration:
+ * - roadmaps, roadmapsByUser, roadmapsByTitle (roadmap entities)
+ * - promptTemplates (AI prompt templates)
+ *
  * @see RedisCacheManager
  * @see RedisCacheConfiguration
  */
@@ -24,6 +28,7 @@ public class RedisConfig {
 
     /**
      * Creates a RedisCacheManager bean with a default cache configuration.
+     * All caches (including promptTemplates) use a 1-hour TTL by default.
      *
      * @param connectionFactory the RedisConnectionFactory used to create the RedisCacheManager
      * @return a RedisCacheManager instance with the specified default cache configuration
@@ -32,7 +37,7 @@ public class RedisConfig {
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration redisCacheConfiguration =  RedisCacheConfiguration
                 .defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(60))
+                .entryTtl(Duration.ofMinutes(60))  // 1 hour TTL for all caches including promptTemplates
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));

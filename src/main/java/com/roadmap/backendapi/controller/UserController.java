@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.response.APIResponse;
-import com.roadmap.backendapi.service.user.UseService;
+import com.roadmap.backendapi.service.user.UserService;
 
 import static com.roadmap.backendapi.utils.Const.BEARER;
 
@@ -20,9 +20,9 @@ import static com.roadmap.backendapi.utils.Const.BEARER;
 @RequestMapping("/api/v1/users")
 public class UserController {
     
-    private final UseService userService;
+    private final UserService userService;
 
-    public UserController(UseService userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 

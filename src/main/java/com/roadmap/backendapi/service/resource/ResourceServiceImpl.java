@@ -11,7 +11,8 @@ import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.ResourceType;
 import com.roadmap.backendapi.repository.ResourceRepository;
 import com.roadmap.backendapi.request.resource.UpdateResourceRequest;
-import org.springframework.ai.chat.client.ChatClient;
+import com.roadmap.backendapi.service.ai.AIProviderService;
+import com.roadmap.backendapi.service.prompt.PromptService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -27,17 +28,20 @@ public class ResourceServiceImpl implements ResourceService {
 
     private final ResourceRepository resourceRepository;
     private final ResourceMapper resourceMapper;
-    private final ChatClient chatClient;
+    private final AIProviderService aiService;
+    private final PromptService promptService;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository, ResourceMapper resourceMapper, ChatClient chatClient ) {
+    public ResourceServiceImpl(ResourceRepository resourceRepository, ResourceMapper resourceMapper, AIProviderService aiService, PromptService promptService) {
         this.resourceRepository = resourceRepository;
         this.resourceMapper = resourceMapper;
-        this.chatClient = chatClient;
+        this.aiService = aiService;
+        this.promptService = promptService;
     }
 
 
     /**
      * Adds resources to a milestone based on the user's roadmap.
+     * Uses the AI service to generate relevant resources.
      *
      * @param milestone the milestone to which resources will be added
      * @param roadmap   the roadmap containing user data and details
@@ -49,20 +53,16 @@ public class ResourceServiceImpl implements ResourceService {
     public void addResourcesToMilestone(Milestone milestone , Roadmap roadmap) {
         String prompt = getResourcePrompt(milestone,roadmap)
                 .orElseThrow(() -> new MilestoneUnexpectedException("Milestone Fields are Empty "));
-        try {
-            List<Resource> resources = chatClient.prompt(prompt).call().entity(new ParameterizedTypeReference<>() {});
-            if (resources == null || resources.isEmpty()) {
-                throw new MilestoneUnexpectedException("No resources generated for milestone");
-            }
-            // Validate each resource before saving
-            resources.forEach(this::validateResource);
-            milestone.setResources(resources);
-        } catch (ResourceAccessException e) {
-            throw new ConnectionErrorException();
-        } catch (Exception e) {
-            throw new MilestoneUnexpectedException("Failed to parse AI response: " + e.getMessage());
+
+        List<Resource> resources = aiService.generate(prompt, new ParameterizedTypeReference<>() {});
+
+        if (resources == null || resources.isEmpty()) {
+            throw new MilestoneUnexpectedException("No resources generated for milestone");
         }
 
+        // Validate each resource before saving
+        resources.forEach(this::validateResource);
+        milestone.setResources(resources);
     }
     /**
      * Validates a resource before saving it.
@@ -83,6 +83,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     /**
      * Generates a prompt for the AI to recommend resources based on the user's roadmap and milestone.
+     * Uses external prompt templates loaded from resources/prompts/resource/
      *
      * @param milestone the milestone for which resources are to be recommended
      * @param roadmap   the roadmap containing user data and details
@@ -91,49 +92,26 @@ public class ResourceServiceImpl implements ResourceService {
     private Optional<String> getResourcePrompt(Milestone milestone, Roadmap roadmap) {
 
         validateRoadmapData(roadmap);
-        return Optional.of(String.format(
-                """
-                        You are a resource recommendation engine. Your task is to suggest a list of high-quality, relevant, and actionable resources to help the user complete a specific milestone in their roadmap. The resources should be tailored to the user's goal, interests, skills, and the details of the roadmap and milestone.
-                        
-                        Here is the user's data:
-                        - **Goal**: %s
-                        - **Interests**: %s
-                        - **Skills**: %s
-                        
-                        Here is the roadmap's data:
-                        - **Title**: %s
-                        - **Description**: %s
-                        
-                        Here is the milestone's data:
-                        - **Title**: %s
-                        - **Description**: %s
-                        - **Actionable Steps**: %s
-                        - **Prerequisites**: %s
-                        
-                        Generate a list of resources with the following details for each resource:
-                        1. **Id**: A unique identifier starts from 1 .
-                        2. **Title**: A concise and specific title for the resource.
-                        3. **Type**: The type of resource must be one of the following types (VIDEO, ARTICLE, BOOK, COURSE, PODCAST, TOOL , TUTORIAL, PRACTICE,WEBSITE).
-                        4. **URL**: A link to the resource (if available). Ensure the URL is valid and accessible.
-                        5. **Description**: A brief description of the resource, explaining how it will help the user complete the milestone.
-                        
-                        The resources should:
-                        - Be directly relevant to the milestone's title and description.
-                        - Align with the user's goal, interests, and skills.
-                        - Include a mix of resource types (e.g., videos, articles, books, courses, podcasts).
-                        - Be high-quality, actionable, and from reputable sources.
-                      
-                        Ensure the resources are:
-                        - Specific and actionable.
-                        - Tailored to the user's current skills and interests.
-                        - Logically ordered to ensure a clear progression toward completing the milestone.
-                        
-                        """,
-                roadmap.getUser().getGoal(), roadmap.getUser().getInterests(), roadmap.getUser().getSkills(),
-                roadmap.getTitle(), roadmap.getDescription(),
-                milestone.getTitle(), milestone.getDescription(), milestone.getActionableSteps(), milestone.getPrerequisites()
-        )).orElseThrow(() -> new MilestoneUnexpectedException("Milestone Fields are Empty ")).describeConstable();
 
+        java.util.Map<String, Object> variables = java.util.Map.of(
+                "user", java.util.Map.of(
+                        "goal", roadmap.getUser().getGoal(),
+                        "interests", roadmap.getUser().getInterests(),
+                        "skills", roadmap.getUser().getSkills()
+                ),
+                "roadmap", java.util.Map.of(
+                        "title", roadmap.getTitle(),
+                        "description", roadmap.getDescription()
+                ),
+                "milestone", java.util.Map.of(
+                        "title", milestone.getTitle(),
+                        "description", milestone.getDescription(),
+                        "actionableSteps", milestone.getActionableSteps(),
+                        "prerequisites", milestone.getPrerequisites()
+                )
+        );
+
+        return Optional.of(promptService.renderPrompt("resource", "resource_recommendation", variables));
     }
 
     /**

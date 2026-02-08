@@ -61,6 +61,26 @@ spring:
           max-tokens: 4096
 
 # ============================================
+# AI Provider Abstraction Configuration
+# ============================================
+ai:
+  provider:
+    primary: gemini
+    fallback:
+      enabled: false
+      order: [gemini, openai]
+
+    gemini:
+      enabled: true
+
+    openai:
+      enabled: false
+      api-key: ${OPENAI_API_KEY:}
+
+    mock:
+      enabled: false
+
+# ============================================
 # JWT Configuration
 # ============================================
 jwt:
@@ -178,6 +198,15 @@ spring:
   ai:
     openai:
       api-key: test-api-key
+
+# Enable mock AI provider for tests
+ai:
+  provider:
+    primary: mock
+    mock:
+      enabled: true
+    gemini:
+      enabled: false
 
 jwt:
   secret: ${JWT-SECRET-KEY}
