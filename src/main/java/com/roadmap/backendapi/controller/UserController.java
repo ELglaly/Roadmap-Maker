@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.roadmap.backendapi.dto.UserDTO;
 import com.roadmap.backendapi.response.APIResponse;
-import com.roadmap.backendapi.service.user.UseService;
+import com.roadmap.backendapi.service.user.UserService;
 
 import static com.roadmap.backendapi.utils.Const.BEARER;
 
@@ -20,9 +20,9 @@ import static com.roadmap.backendapi.utils.Const.BEARER;
 @RequestMapping("/api/v1/users")
 public class UserController {
     
-    private final UseService userService;
+    private final UserService userService;
 
-    public UserController(UseService userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
@@ -41,37 +41,35 @@ public class UserController {
 
 
     @GetMapping("/login")
-    public ResponseEntity.BodyBuilder login(@RequestBody @Validated LoginRequest loginRequestDTO) {
-            String  token = userService.loginUser(loginRequestDTO);
-            return ResponseEntity.ok().header("Authorization", BEARER+token);
+    public ResponseEntity<Void> login(@RequestBody @Validated LoginRequest loginRequestDTO) {
+        String token = userService.loginUser(loginRequestDTO);
+        return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, BEARER + token).build();
     }
 
 
     @GetMapping("/logout")
-    public ResponseEntity<APIResponse> logout( @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<APIResponse> logout(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
 
-        // 1. Validate Authorization header
         if (authHeader == null || !authHeader.startsWith(BEARER)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new APIResponse("Missing or invalid Authorization header", null));
         }
 
-            String token = StringUtils.delete(authHeader, BEARER).trim();
+        String token = StringUtils.delete(authHeader, BEARER).trim();
 
-            // 3. Perform logout
-            userService.logoutUser(token);
+        userService.logoutUser(token);
 
-            // 4. Return success response
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(new APIResponse("User logged out successfully", null));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(new APIResponse("User logged out successfully", null));
     }
 
-@DeleteMapping("/{id}")
-public ResponseEntity<APIResponse> remove(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<APIResponse> remove(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(new APIResponse("User deleted successfully", null));
-}
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<APIResponse> update(@PathVariable Long id, @RequestBody UserUpdateDTO userUpdateDto) {

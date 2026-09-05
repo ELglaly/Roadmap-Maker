@@ -180,7 +180,7 @@ spring:
       api-key: test-api-key
 
 jwt:
-  secret: ${JWT-SECRET-KEY}
+  secret: ${JWT_SECRET_KEY:dGVzdC1vbmx5LXNlY3JldC1rZXktZm9yLXRlc3RzLTIwMjY=}
   expiration:
     ms: 300000  # 5 minutes for faster tests
 

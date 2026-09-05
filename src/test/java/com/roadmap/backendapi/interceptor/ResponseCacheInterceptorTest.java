@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -80,7 +79,8 @@ class ResponseCacheInterceptorTest {
     void beforeBodyWrite_whenBodyIsAPIResponseAndUserIsAuthenticated_shouldCacheResponse() {
         // Arrange
         APIResponse apiResponse = new APIResponse("Test message", "Test data");
-        Authentication authentication = new UsernamePasswordAuthenticationToken("user123", "password");
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("user123");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
 
@@ -97,7 +97,8 @@ class ResponseCacheInterceptorTest {
     void beforeBodyWrite_whenBodyIsNotAPIResponse_shouldNotCacheResponse() {
         // Arrange
         String body = "Not an APIResponse";
-        Authentication authentication = new UsernamePasswordAuthenticationToken("user123", "password");
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("user123");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
 
@@ -114,7 +115,7 @@ class ResponseCacheInterceptorTest {
     void beforeBodyWrite_whenUserIsNotAuthenticated_shouldNotCacheResponse() {
         // Arrange
         APIResponse apiResponse = new APIResponse("Test message", "Test data");
-        Authentication authentication = new UsernamePasswordAuthenticationToken("anonymousUser", "");
+        Authentication authentication = mock(Authentication.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("anonymousUser");

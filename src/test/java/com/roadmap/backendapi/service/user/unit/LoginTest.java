@@ -1,5 +1,4 @@
 package com.roadmap.backendapi.service.user.unit;
-import com.roadmap.backendapi.exception.user.AlreadyLoggedInException;
 import com.roadmap.backendapi.exception.user.LoginFailedException;
 import com.roadmap.backendapi.mapper.UserMapper;
 import com.roadmap.backendapi.repository.user.UserRepository;
@@ -74,8 +73,8 @@ public class LoginTest {
     }
 
     /**
-     * Tests the loginUser method when the user is already logged in.
-     * Expects an AlreadyLoggedInException to be thrown.
+     * Verifies that an internal authentication failure is exposed as a safe
+     * generic login error.
      */
     @Test
     public void test_loginUser_alreadyLoggedIn() {
@@ -83,7 +82,9 @@ public class LoginTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new InternalAuthenticationServiceException("User is already logged in"));
 
-        assertThrows(AlreadyLoggedInException.class, () -> userServiceImpl.loginUser(loginRequest));
+        LoginFailedException exception = assertThrows(LoginFailedException.class,
+                () -> userServiceImpl.loginUser(loginRequest));
+        assertEquals("Authentication failed. Please try again.", exception.getMessage());
     }
 
     /**
@@ -134,7 +135,7 @@ public class LoginTest {
         LoginFailedException exception= assertThrows(LoginFailedException.class, ()
                 -> userServiceImpl.loginUser(loginRequest));
 
-        assertEquals("Login failed: java.lang.RuntimeException: Unexpected error", exception.getMessage());
+        assertEquals("Login failed due to system error", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
@@ -155,7 +156,7 @@ public class LoginTest {
         LoginFailedException exception = assertThrows(LoginFailedException.class, ()
                 -> userServiceImpl.loginUser(loginRequest));
 
-        assertEquals("User not found", exception.getMessage());
+        assertEquals("Invalid username or password", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtService, never()).generateToken(anyString());

@@ -1,154 +1,97 @@
-#  AI-Powered Learning Roadmap Generator
+# Roadmap Maker
 
-##  Project Information
+Roadmap Maker is a Spring Boot backend that helps users create and manage personalised learning roadmaps. It combines user accounts, JWT authentication, roadmap and milestone management, progress tracking, resource recommendations, Redis response caching, and AI-assisted roadmap generation.
 
-**Project Name:** AI-Powered Learning Roadmap Generator
+## Stack
 
-**Project Description:**  
-An intelligent and modular **Learning Roadmap Generator** built with **Spring Boot** and integrated with **AI services**. The system creates personalized learning paths based on user preferences, experience levels, and target goals using AI-driven recommendations. It features real-time progress tracking via WebSocket, Redis caching for improved performance, and comprehensive resource management for each milestone.
+- Java 23 and Spring Boot 3.4.3
+- Spring Web, Spring Data JPA, Spring Security, and WebSocket
+- MySQL with Liquibase migrations
+- Redis for response caching
+- Spring AI with an OpenAI-compatible Gemini endpoint
+- Maven, Lombok, MapStruct, and JUnit 5
 
-##  Features
+## Prerequisites
 
--  **AI-Enhanced Learning Paths** – Intelligent roadmap generation using Spring AI and Google Cloud AI Platform
--  **User Authentication & Authorization** – Secure JWT-based authentication with role management
--  **Roadmap Templates** – Predefined templates for common learning goals
--  **Real-time Progress Tracking** – Live progress updates via WebSocket integration
--  **Custom Roadmaps** – User-created and modifiable learning paths
--  **Smart Notifications** – Automated reminders and milestone updates
--  **RESTful API** – Comprehensive API for frontend integration
--  **Resource Management** – AI-curated learning resources for each milestone
--  **Redis Caching** – Performance optimization for API responses
--  **Testing** – Extensive unit and integration testing
+- JDK 23
+- Maven 3.9+ (the Maven wrapper is included)
+- MySQL 8+
+- Redis 7+
+- An AI provider key when using AI-generated roadmaps or resources
 
-##  Technologies & Tools
+## Configuration
 
-**Core:**
-- Java 23
-- Spring Boot 3.4.3
-- Spring Security with JWT
-- Spring WebSocket
-- Spring Data JPA
+Copy the example environment file and replace the placeholders:
 
-**AI Integration:**
-- Spring AI OpenAI
-- Google Cloud AI Platform
-
-**Database & Caching:**
-- MySQL
-- Redis 7.4.2
-
-**Other:**
-- Maven 3.9.9
-- Lombok
-- MapStruct
-- JUnit 5
-
-
-### 4. Configure Environment
-Create a `.env` file in the project root:
-```properties
-SPRING_AI_GEMINI_API_KEY=your_api_key
-SPRING_DATASOURCE_USERNAME=your_db_username
-SPRING_DATASOURCE_PASSWORD=your_db_password
-```
-
-### 5. Build and Run
 ```bash
-# Clone the repository
-git clone https://github.com/ELglaly/Roadmap-Maker
-cd roadmap-generator
-
-# Install dependencies
-mvn clean install
-
-# Start the application
-mvn spring-boot:run
+cp .env.example .env
 ```
 
-##  Quick Start
+The application reads these values from the environment:
 
-### 1. Register a User
+| Variable | Purpose |
+| --- | --- |
+| `SPRING_DATASOURCE_USERNAME` | MySQL username |
+| `SPRING_DATASOURCE_PASSWORD` | MySQL password |
+| `SPRING_AI_GEMINI_API_KEY` | AI provider API key |
+| `JWT_SECRET_KEY` | Secret used to sign JWTs |
+| `REDIS_HOST` / `REDIS_PORT` | Redis connection settings |
+| `REDIS_PASSWORD` | Optional Redis password |
+| `SPRING_PROFILES_ACTIVE` | Spring profile, usually `dev`, `test`, or `prod` |
+
+Create a MySQL database named `roadmapmaker`, make sure MySQL and Redis are running, and keep `.env` private. Liquibase applies the schema from `src/main/resources/db/changelog` when the application starts.
+
+## Run and test
+
 ```bash
-curl -X POST http://localhost:8080/api/v1/users/register \
--H "Content-Type: application/json" \
--d '{
-  "username": "user123",
-  "password": "Password123$#",
-  "email": "user@gmail.com",
-  "goal": "Learn Java Programming",
-  "interests": "Software Development",
-  "skills": "Java Programming"
-}'
+./mvnw test
+./mvnw spring-boot:run
 ```
 
-### 2. Generate a Roadmap
-```bash
-curl -X POST http://localhost:8080/api/v1/roadmaps/create/{userId} \
--H "Authorization: Bearer your_jwt_token"
+On Windows, use `mvnw.cmd` instead of `./mvnw`.
+
+The default development server runs on `http://localhost:8080`. Tests use the `test` profile and an in-memory H2 database where configured.
+
+## API overview
+
+The controllers currently expose endpoints for:
+
+- `/api/v1/users` — user registration, login, logout, lookup, update, and deletion
+- `/api/v1/roadmaps` — roadmap creation, retrieval, listing, search, and user roadmaps
+- `/api/v1/milestone` — milestone lookup by roadmap
+- `/api/progress` — progress creation, update, retrieval, and deletion
+- `/api/v1/responses` — previously generated responses
+
+Most protected endpoints require an `Authorization: Bearer <token>` header. Check the controller classes for request and response payloads because the API is still evolving.
+
+## WebSocket
+
+Roadmap generation progress is also exposed through the WebSocket configuration under the roadmap API path. Clients should connect with the same authentication and deployment considerations as the corresponding HTTP API.
+
+## Project layout
+
+```text
+src/main/java/com/roadmap/backendapi/
+├── controller       HTTP endpoints
+├── service          application and domain services
+├── entity           JPA entities and enums
+├── request          request models
+├── response         response models
+├── mapper           DTO/entity mapping
+├── security         JWT authentication
+├── validator        input validation
+├── exception        application exceptions and handlers
+└── Config           Spring configuration
 ```
 
+## Security notes
 
-## 📁 Project Structure
+Never commit `.env`, API keys, database passwords, JWT secrets, or cloud credentials. Use a different long random JWT secret in every environment and rotate any credential that has ever been committed. Production should use the `prod` profile and should not expose actuator details publicly.
 
-```
-📂 src
- ┣ 📂 main
- ┃ ┣ 📂 java
- ┃ ┃ ┗ 📂 com
- ┃ ┃   ┗ 📂 roadmap
- ┃ ┃     ┗ 📂 backendapi
- ┃ ┃       ┣ 📂 config
- ┃ ┃       ┣ 📂 controller
- ┃ ┃       ┣ 📂 dto
- ┃ ┃       ┣ 📂 entity
- ┃ ┃       ┣ 📂 env
- ┃ ┃       ┣ 📂 exception
- ┃ ┃       ┣ 📂 handler
- ┃ ┃       ┣ 📂 interceptor
- ┃ ┃       ┣ 📂 mapper
- ┃ ┃       ┣ 📂 repository
- ┃ ┃       ┣ 📂 request
- ┃ ┃       ┣ 📂 response
- ┃ ┃       ┣ 📂 security
- ┃ ┃       ┣ 📂 service
- ┃ ┃       ┣ 📂 utils
- ┃ ┃       ┃ ┗ 📂 validator
- ┃ ┃       ┃   ┗ 📂 user
- ┃ ┃       ┣ 📂 consts
- ┃ ┃       ┗ 📄 BackendapiApplication.java
- ┃ ┗ 📂 resources
- ┃   ┗ 📄 application.properties
- ┣ 📂 test
- ┃ ┗ 📂 com
- ┃   ┗ 📂 roadmap
- ┃     ┗ 📂 backendapi
- ┃       ┣ 📂 controller
- ┃       ┣ 📂 interceptor
- ┃       ┣ 📂 service
- ┃       ┃ ┣ 📂 milestone
- ┃       ┃ ┣ 📂 progress
- ┃       ┃ ┣ 📂 response
- ┃       ┃ ┣ 📂 roadmap
- ┃       ┃ ┗ 📂 user
- ┃       ┗ 📄 BackendapiApplicationTests.java
-📂 target
-📄 .env
-📄 .gitattributes
-📄 .gitignore
-📄 backendapi.iml
-📄 devfile.yaml
-📄 HELP.md
-📄 mvnw
-📄 mvnw.cmd
-📄 pom.xml
-📄 qodana.yaml
-```
+## Contributing
 
-##  Security
+Keep changes focused, add tests for behavior changes, run the Maven test suite before opening a pull request, and use concise commit messages that explain the change. Do not commit build output, IDE metadata, or local configuration.
 
-The application uses JWT-based authentication with the following security features:
-- Token-based authentication
-- Role-based access control
-- Rate limiting
-- Secure headers
-- CSRF protection
+## License
+
+No license is currently specified for this repository.

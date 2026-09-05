@@ -21,6 +21,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -94,11 +95,14 @@ public class UserServiceImpl implements UserService {
             rollbackFor = {Exception.class})
     public String loginUser(LoginRequest loginRequest) {
         try {
-           authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
                             loginRequest.getPassword())
             );
+            if (!authentication.isAuthenticated()) {
+                throw new LoginFailedException("Invalid username or password");
+            }
             return JwtService.generateToken(loginRequest.getUsername());
         }
         catch (BadCredentialsException | UsernameNotFoundException e) {
