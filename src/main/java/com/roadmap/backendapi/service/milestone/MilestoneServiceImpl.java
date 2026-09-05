@@ -8,8 +8,9 @@ import com.roadmap.backendapi.entity.Milestone;
 import com.roadmap.backendapi.entity.Roadmap;
 import com.roadmap.backendapi.entity.enums.MilestoneStatus;
 import com.roadmap.backendapi.repository.MilestoneRepository;
+import com.roadmap.backendapi.service.ai.AIProviderService;
+import com.roadmap.backendapi.service.prompt.PromptService;
 import com.roadmap.backendapi.service.resource.ResourceService;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
@@ -26,19 +27,21 @@ public class MilestoneServiceImpl implements MilestoneService {
 
     private final MilestoneRepository milestoneRepository;
     private final MilestoneMapper milestoneMapper;
-    private final ChatClient chatClient;
+    private final AIProviderService aiService;
+    private final PromptService promptService;
     private final ResourceService resourceService;
 
-    public MilestoneServiceImpl(MilestoneRepository milestoneRepository, MilestoneMapper milestoneMapper, ChatClient chatClient, ResourceService resourceService) {
+    public MilestoneServiceImpl(MilestoneRepository milestoneRepository, MilestoneMapper milestoneMapper, AIProviderService aiService, PromptService promptService, ResourceService resourceService) {
         this.milestoneRepository = milestoneRepository;
         this.milestoneMapper = milestoneMapper;
-        this.chatClient = chatClient;
+        this.aiService = aiService;
+        this.promptService = promptService;
         this.resourceService = resourceService;
     }
 
     /**
      * Updates the milestones for a given roadmap.
-     * It generates new milestones using the ChatClient and saves them to the database.
+     * It generates new milestones using the AI service and saves them to the database.
      *
      * @param roadmap the roadmap for which to update milestones
      */
@@ -46,14 +49,10 @@ public class MilestoneServiceImpl implements MilestoneService {
     public void updateMilestones(Roadmap roadmap) {
         // prompt the user to generate milestones
         String prompt = getMilestonePrompt(roadmap);
-        List<Milestone> milestones = null;
-        // Call the chat client to generate milestones based on the prompt
-        try {
-            milestones = chatClient.prompt(prompt).call().entity(new ParameterizedTypeReference<List<Milestone>>() {
-            });
-        }  catch (ResourceAccessException e) {
-            throw new ConnectionErrorException();
-        }
+
+        // Call the AI service to generate milestones based on the prompt
+        List<Milestone> milestones = aiService.generate(prompt, new ParameterizedTypeReference<List<Milestone>>() {});
+
         milestoneRepository.deleteAllByRoadmapId(roadmap.getId());
         assert milestones != null;
         milestones.forEach(milestone ->
@@ -65,50 +64,27 @@ public class MilestoneServiceImpl implements MilestoneService {
     }
 
     /**
-     * Generates a prompt for the ChatClient to create milestones based on the user's data and roadmap details.
+     * Generates a prompt for the AI service to create milestones based on the user's data and roadmap details.
+     * Uses external prompt templates loaded from resources/prompts/milestone/
      *
      * @param roadmap the roadmap containing user data and roadmap details
      * @return the generated prompt
      */
     private String getMilestonePrompt(Roadmap roadmap) {
         try {
-            return String.format(
-                    """
-                            You are a roadmap milestone generator. Your task is to create a detailed, personalized, and actionable roadmap with milestones based on the user's goal, interests, skills, and the roadmap's title and description. Each milestone should be specific, realistic, and logically ordered to help the user achieve their goal.
-                            
-                            Here is the user's data:
-                            - **Goal**: %s
-                            - **Interests**: %s
-                            - **Skills**: %s
-                            
-                            Here is the roadmap's data:
-                            - **Title**: %s
-                            - **Description**: %s
-                            
-                            Generate a list of milestones with the following details for each milestone:
-                            1. **Title**: A concise and specific title for the milestone.
-                            2. **Description**: A detailed description of what the user needs to accomplish in this milestone.
-                            3. **Actionable Steps**: A step-by-step breakdown of what the user should do to complete this milestone. These steps should be specific and include tasks such as studying, practicing, building projects, or seeking mentorship.
-                            4. **Prerequisites**: Any knowledge, skills, or prior milestones that the user should complete before starting this milestone.
-                            5. **Duration**: The estimated time required to complete this milestone (in weeks or months). Ensure the duration is realistic and achievable.
-                            
-                            The milestones should:
-                            - Be logically ordered and build upon each other.
-                            - Be tailored to the user's goal, interests, and skills.
-                            - Include a mix of learning, practice, and application tasks.
-                            - Provide clear progression from beginner to advanced levels (if applicable).
-                            
-                            Return the output in JSON format with the following structure:
-                            Ensure the milestones are:
-                            - Specific and actionable.
-                            - Realistic in terms of time and effort.
-                            - Tailored to the user's current skills and interests.
-                            - Logically ordered to ensure a clear progression toward the goal.
-                            
-                            """,
-                    roadmap.getUser().getGoal(), roadmap.getUser().getInterests(), roadmap.getUser().getSkills(),
-                    roadmap.getTitle(), roadmap.getDescription()
+            java.util.Map<String, Object> variables = java.util.Map.of(
+                    "user", java.util.Map.of(
+                            "goal", roadmap.getUser().getGoal(),
+                            "interests", roadmap.getUser().getInterests(),
+                            "skills", roadmap.getUser().getSkills()
+                    ),
+                    "roadmap", java.util.Map.of(
+                            "title", roadmap.getTitle(),
+                            "description", roadmap.getDescription()
+                    )
             );
+
+            return promptService.renderPrompt("milestone", "milestone_generation", variables);
         }
         catch ( IllegalArgumentException e)
         {

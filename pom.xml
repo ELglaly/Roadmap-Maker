@@ -85,6 +85,13 @@
 			<version>9.5</version>  <!-- Or the latest version -->
 		</dependency>
 
+		<!-- SnakeYAML for YAML parsing -->
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>2.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>

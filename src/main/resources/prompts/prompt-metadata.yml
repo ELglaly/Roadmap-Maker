@@ -1,0 +1,30 @@
+templates:
+  roadmap:
+    complete_roadmap:
+      latest_version: v1
+      versions:
+        - version: v1
+          file: complete_roadmap_v1.txt
+          created_at: 2026-02-07
+          description: Initial roadmap generation prompt
+          active_profiles: [dev, test, prod]
+
+  milestone:
+    milestone_generation:
+      latest_version: v1
+      versions:
+        - version: v1
+          file: milestone_generation_v1.txt
+          created_at: 2026-02-07
+          description: Initial milestone generation prompt
+          active_profiles: [dev, test, prod]
+
+  resource:
+    resource_recommendation:
+      latest_version: v1
+      versions:
+        - version: v1
+          file: resource_recommendation_v1.txt
+          created_at: 2026-02-07
+          description: Initial resource recommendation prompt
+          active_profiles: [dev, test, prod]
